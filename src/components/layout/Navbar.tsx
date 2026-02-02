@@ -2,30 +2,24 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Briefcase, User, LogOut, MessageSquare, PlusCircle, LayoutDashboard } from 'lucide-react';
-
 const Navbar = () => {
-  const { user, profile, signOut } = useAuth();
+  const {
+    user,
+    profile,
+    signOut
+  } = useAuth();
   const navigate = useNavigate();
-
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
-
-  return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" dir="rtl">
+  return <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" dir="rtl">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary">
           <Briefcase className="h-6 w-6" />
-          <span>منصة العمل الحر</span>
+          <span>منصة تاسكاتى</span>
         </Link>
 
         <div className="flex items-center gap-4">
@@ -33,16 +27,13 @@ const Navbar = () => {
             <Button variant="ghost">المشاريع</Button>
           </Link>
           
-          {user ? (
-            <>
-              {profile?.user_type === 'client' && (
-                <Link to="/projects/new">
+          {user ? <>
+              {profile?.user_type === 'client' && <Link to="/projects/new">
                   <Button variant="outline" size="sm">
                     <PlusCircle className="h-4 w-4 ml-2" />
                     أضف مشروع
                   </Button>
-                </Link>
-              )}
+                </Link>}
               
               <Link to="/messages">
                 <Button variant="ghost" size="icon">
@@ -86,21 +77,16 @@ const Navbar = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </>
-          ) : (
-            <>
+            </> : <>
               <Link to="/auth">
                 <Button variant="ghost">تسجيل الدخول</Button>
               </Link>
               <Link to="/auth">
                 <Button>إنشاء حساب</Button>
               </Link>
-            </>
-          )}
+            </>}
         </div>
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navbar;
