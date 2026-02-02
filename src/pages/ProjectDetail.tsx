@@ -193,7 +193,7 @@ const ProjectDetail = () => {
     setEstimatedDays('');
   };
 
-  const handleProposalAction = async (proposalId: string, status: 'accepted' | 'rejected') => {
+  const handleProposalAction = async (proposalId: string, status: 'accepted' | 'rejected', freelancerId?: string) => {
     const { error } = await supabase
       .from('proposals')
       .update({ status })
@@ -209,10 +209,31 @@ const ProjectDetail = () => {
     }
 
     if (status === 'accepted') {
+      // Update project status
       await supabase
         .from('projects')
         .update({ status: 'in_progress' })
         .eq('id', id);
+
+      // Auto-send message to freelancer
+      if (freelancerId && profile) {
+        await supabase.from('messages').insert({
+          sender_id: profile.id,
+          receiver_id: freelancerId,
+          content: 'من فضلك ابعت تفاصيل المشروع',
+          project_id: id,
+          message_type: 'text',
+        });
+
+        toast({
+          title: 'تم قبول العرض',
+          description: 'تم إرسال رسالة للمستقل لبدء العمل',
+        });
+
+        // Navigate to messages with the freelancer
+        navigate(`/messages?recipient=${freelancerId}`);
+        return;
+      }
     }
 
     toast({
@@ -351,7 +372,7 @@ const ProjectDetail = () => {
                           <div className="flex gap-2 mt-4">
                             <Button
                               size="sm"
-                              onClick={() => handleProposalAction(proposal.id, 'accepted')}
+                              onClick={() => handleProposalAction(proposal.id, 'accepted', proposal.profiles.id)}
                             >
                               <CheckCircle className="h-4 w-4 ml-1" />
                               قبول

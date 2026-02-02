@@ -14,30 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      call_logs: {
+        Row: {
+          call_type: string
+          caller_id: string
+          created_at: string
+          duration: number | null
+          ended_at: string | null
+          id: string
+          receiver_id: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          call_type: string
+          caller_id: string
+          created_at?: string
+          duration?: number | null
+          ended_at?: string | null
+          id?: string
+          receiver_id: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          call_type?: string
+          caller_id?: string
+          created_at?: string
+          duration?: number | null
+          ended_at?: string | null
+          id?: string
+          receiver_id?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_logs_caller_id_fkey"
+            columns: ["caller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
+          audio_duration: number | null
+          audio_url: string | null
           content: string
           created_at: string
           id: string
           is_read: boolean
+          message_type: string
           project_id: string | null
           receiver_id: string
           sender_id: string
         }
         Insert: {
+          audio_duration?: number | null
+          audio_url?: string | null
           content: string
           created_at?: string
           id?: string
           is_read?: boolean
+          message_type?: string
           project_id?: string | null
           receiver_id: string
           sender_id: string
         }
         Update: {
+          audio_duration?: number | null
+          audio_url?: string | null
           content?: string
           created_at?: string
           id?: string
           is_read?: boolean
+          message_type?: string
           project_id?: string | null
           receiver_id?: string
           sender_id?: string
