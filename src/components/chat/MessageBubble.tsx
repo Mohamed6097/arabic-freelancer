@@ -17,6 +17,7 @@ interface MessageBubbleProps {
   timestamp: string;
   isOwn: boolean;
   isRead: boolean;
+  isDeleted?: boolean;
   onUpdate?: () => void;
 }
 
@@ -32,6 +33,7 @@ const MessageBubble = ({
   timestamp,
   isOwn,
   isRead,
+  isDeleted = false,
   onUpdate
 }: MessageBubbleProps) => {
   const renderAttachment = () => {
@@ -94,6 +96,34 @@ const MessageBubble = ({
       </a>
     );
   };
+
+  // Render deleted message placeholder
+  if (isDeleted) {
+    return (
+      <div className={cn("flex group", isOwn ? "justify-start" : "justify-end")}>
+        <div className="flex items-start gap-1">
+          <div
+            className={cn(
+              "max-w-[75%] rounded-2xl px-4 py-2 shadow-sm",
+              isOwn
+                ? "bg-muted text-muted-foreground rounded-tl-sm"
+                : "bg-muted text-muted-foreground rounded-tr-sm"
+            )}
+          >
+            <p className="text-sm italic">🚫 تم حذف هذه الرسالة</p>
+            <div className={cn(
+              "flex items-center gap-1 mt-1",
+              isOwn ? "justify-start" : "justify-end"
+            )}>
+              <span className="text-[10px] text-muted-foreground">
+                {format(new Date(timestamp), 'HH:mm', { locale: ar })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex group", isOwn ? "justify-start" : "justify-end")}>

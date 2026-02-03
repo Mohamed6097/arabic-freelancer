@@ -60,9 +60,10 @@ const MessageActions = ({ messageId, content, messageType, onUpdate }: MessageAc
 
   const handleDelete = async () => {
     setLoading(true);
+    // Soft delete: mark as deleted instead of removing
     const { error } = await supabase
       .from('messages')
-      .delete()
+      .update({ is_deleted: true, content: 'تم حذف هذه الرسالة' })
       .eq('id', messageId);
 
     setLoading(false);
