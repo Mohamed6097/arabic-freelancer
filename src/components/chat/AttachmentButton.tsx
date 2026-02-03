@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Paperclip, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,12 +13,21 @@ interface AttachmentButtonProps {
 
 const AttachmentButton = ({ profileId, receiverId, onSent, disabled }: AttachmentButtonProps) => {
   const [uploading, setUploading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setUserId(user.id);
+    };
+    getUser();
+  }, []);
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !userId) return;
 
     // Validate file size (10MB max)
     if (file.size > 10 * 1024 * 1024) {
@@ -33,8 +42,8 @@ const AttachmentButton = ({ profileId, receiverId, onSent, disabled }: Attachmen
     setUploading(true);
 
     try {
-      // Upload file
-      const fileName = `${profileId}/${Date.now()}_${file.name}`;
+      // Upload file - use userId for folder to match RLS policy
+      const fileName = `${userId}/${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from('message-attachments')
         .upload(fileName, file);
