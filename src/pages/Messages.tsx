@@ -398,11 +398,11 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="h-screen flex flex-col bg-background overflow-hidden" dir="rtl">
       <Navbar />
       
-      <main className="container py-4 lg:py-8">
-        <div className="grid gap-0 lg:gap-4 lg:grid-cols-3 h-[calc(100vh-8rem)] bg-card rounded-xl overflow-hidden shadow-lg border">
+      <main className="flex-1 container py-4 lg:py-8 overflow-hidden">
+        <div className="grid gap-0 lg:gap-4 lg:grid-cols-3 h-full bg-card rounded-xl overflow-hidden shadow-lg border">
           {/* Conversations List */}
           <div className={`lg:col-span-1 border-l flex flex-col ${showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
             <div className="p-4 border-b">
@@ -486,8 +486,8 @@ const Messages = () => {
                   onVideoCall={handleVideoCall}
                 />
                 
-                <CardContent className="flex-1 flex flex-col p-0 overflow-hidden min-h-0">
-                  <ScrollArea className="flex-1 h-full">
+                <CardContent className="flex-1 flex flex-col p-0 overflow-hidden" style={{ minHeight: 0 }}>
+                  <div className="flex-1 overflow-y-auto">
                     <div className="p-4 space-y-3">
                       {messages.map((msg) => (
                         <MessageBubble
@@ -508,7 +508,7 @@ const Messages = () => {
                       ))}
                       <div ref={messagesEndRef} />
                     </div>
-                  </ScrollArea>
+                  </div>
                   
                   <form onSubmit={handleSendMessage} className="p-4 border-t flex gap-2 bg-card">
                     <VoiceMessageRecorder 
