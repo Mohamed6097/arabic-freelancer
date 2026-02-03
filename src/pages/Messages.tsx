@@ -639,12 +639,12 @@ const Messages = () => {
     <div className="min-h-screen h-[100dvh] flex flex-col bg-background overflow-hidden" dir="rtl">
       <Navbar />
       
-      <main className="flex-1 container py-4 lg:py-8 overflow-hidden">
-        <div className="grid gap-0 lg:gap-4 lg:grid-cols-3 h-full bg-card rounded-xl overflow-hidden shadow-lg border min-h-0">
+      <main className="flex-1 container px-0 sm:px-4 py-0 sm:py-4 lg:py-8 overflow-hidden">
+        <div className="grid gap-0 lg:gap-4 lg:grid-cols-3 h-full bg-card sm:rounded-xl overflow-hidden sm:shadow-lg sm:border min-h-0">
           {/* Conversations List */}
-          <div className={`lg:col-span-1 border-l flex flex-col ${showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
-            <div className="p-4 border-b">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <div className={`lg:col-span-1 border-l flex flex-col h-full ${showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
+            <div className="p-3 sm:p-4 border-b">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
                 المحادثات
               </h2>
@@ -654,7 +654,7 @@ const Messages = () => {
                   placeholder="بحث..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10"
+                  className="pr-10 h-9 sm:h-10 text-sm sm:text-base"
                 />
               </div>
             </div>
@@ -682,25 +682,25 @@ const Messages = () => {
                   <button
                     key={conv.id}
                     onClick={() => handleSelectConversation(conv)}
-                    className={`w-full flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors text-right border-b ${
+                    className={`w-full flex items-center gap-2 sm:gap-3 p-3 sm:p-4 hover:bg-muted/50 transition-colors text-right border-b ${
                       selectedConversation?.id === conv.id ? 'bg-muted' : ''
                     }`}
                   >
-                    <Avatar className="h-12 w-12">
+                    <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
                       <AvatarImage src={conv.avatar_url || ''} />
                       <AvatarFallback>{conv.full_name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold truncate">{conv.full_name}</p>
-                        <span className="text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold truncate text-sm sm:text-base">{conv.full_name}</p>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground flex-shrink-0">
                           {format(new Date(conv.lastMessageTime), 'HH:mm', { locale: ar })}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
+                      <div className="flex items-center justify-between mt-0.5 sm:mt-1 gap-2">
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
                         {conv.unreadCount > 0 && (
-                          <span className="bg-primary text-primary-foreground text-xs rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
+                          <span className="bg-primary text-primary-foreground text-[10px] sm:text-xs rounded-full h-4 sm:h-5 min-w-[16px] sm:min-w-[20px] px-1 sm:px-1.5 flex items-center justify-center flex-shrink-0">
                             {conv.unreadCount}
                           </span>
                         )}
@@ -791,7 +791,7 @@ const Messages = () => {
                     </div>
                   )}
                   
-                  <form onSubmit={handleSendMessage} className="p-4 border-t flex gap-2 bg-card">
+                  <form onSubmit={handleSendMessage} className="p-2 sm:p-4 border-t flex gap-1 sm:gap-2 bg-card">
                     <VoiceMessageRecorder 
                       onSend={handleSendVoiceMessage}
                       disabled={sending}
@@ -808,9 +808,9 @@ const Messages = () => {
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       disabled={sending}
-                      className="flex-1"
+                      className="flex-1 h-9 sm:h-10 text-sm sm:text-base"
                     />
-                    <Button type="submit" size="icon" disabled={sending || !newMessage.trim()}>
+                    <Button type="submit" size="icon" className="h-9 w-9 sm:h-10 sm:w-10" disabled={sending || !newMessage.trim()}>
                       <Send className="h-4 w-4" />
                     </Button>
                   </form>
