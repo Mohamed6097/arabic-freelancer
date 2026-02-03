@@ -19,6 +19,7 @@ import { containsPhoneNumber, getPhoneBlockMessage } from '@/lib/phoneValidator'
 import { Send, MessageSquare, Search, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { sendMessageEmailNotification } from '@/lib/messageEmailNotification';
 
 interface Conversation {
   id: string;
@@ -377,12 +378,14 @@ const Messages = () => {
   };
 
   const sendEmailNotification = async (receiverId: string, senderName: string, messagePreview: string) => {
-    try {
-      await supabase.functions.invoke('send-message-notification', {
-        body: { receiverId, senderName, messagePreview }
+    const result = await sendMessageEmailNotification({ receiverId, senderName, messagePreview });
+    if (result.ok === false) {
+      console.error('Failed to send email notification:', result.error);
+      toast({
+        title: 'تعذر إرسال إشعار البريد',
+        description: result.error,
+        variant: 'destructive',
       });
-    } catch (error) {
-      console.error('Failed to send email notification:', error);
     }
   };
 
@@ -405,15 +408,25 @@ const Messages = () => {
     // After sending, we want to jump to the latest message like WhatsApp
     forceScrollToBottomRef.current = true;
 
-    await supabase.from('messages').insert({
+    const { error: insertError } = await supabase.from('messages').insert({
       sender_id: profile.id,
       receiver_id: selectedConversation.id,
       content: newMessage.trim(),
       message_type: 'text',
     });
 
+    if (insertError) {
+      toast({
+        title: 'خطأ',
+        description: 'تعذر إرسال الرسالة',
+        variant: 'destructive',
+      });
+      setSending(false);
+      return;
+    }
+
     // Send email notification
-    sendEmailNotification(selectedConversation.id, profile.full_name, newMessage.trim());
+    await sendEmailNotification(selectedConversation.id, profile.full_name, newMessage.trim());
 
     setNewMessage('');
     setSending(false);
@@ -441,7 +454,7 @@ const Messages = () => {
         .getPublicUrl(fileName);
 
       // Insert message
-      await supabase.from('messages').insert({
+       const { error: insertError } = await supabase.from('messages').insert({
         sender_id: profile.id,
         receiver_id: selectedConversation.id,
         content: '🎤 رسالة صوتية',
@@ -449,6 +462,10 @@ const Messages = () => {
         audio_url: urlData.publicUrl,
         audio_duration: duration,
       });
+
+       if (!insertError) {
+         await sendEmailNotification(selectedConversation.id, profile.full_name, '🎤 رسالة صوتية');
+       }
 
     } catch (error) {
       console.error('Error sending voice message:', error);
@@ -647,6 +664,7 @@ const Messages = () => {
                     />
                     <AttachmentButton
                       profileId={profile?.id || ''}
+                      senderName={profile?.full_name || ''}
                       receiverId={selectedConversation.id}
                       onSent={fetchMessages}
                       disabled={sending}

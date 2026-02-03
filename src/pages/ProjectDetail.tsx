@@ -14,6 +14,7 @@ import Navbar from '@/components/layout/Navbar';
 import { Calendar, DollarSign, Clock, User, Send, CheckCircle, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { sendMessageEmailNotification } from '@/lib/messageEmailNotification';
 
 interface Project {
   id: string;
@@ -217,13 +218,26 @@ const ProjectDetail = () => {
 
       // Auto-send message to freelancer
       if (freelancerId && profile) {
-        await supabase.from('messages').insert({
+        const messagePreview = 'السلام عليكم';
+        const { error: insertError } = await supabase.from('messages').insert({
           sender_id: profile.id,
           receiver_id: freelancerId,
-          content: 'السلام عليكم',
+          content: messagePreview,
           project_id: id,
           message_type: 'text',
         });
+
+        if (!insertError) {
+          const notifyResult = await sendMessageEmailNotification({
+            receiverId: freelancerId,
+            senderName: profile.full_name,
+            messagePreview,
+          });
+
+          if (notifyResult.ok === false) {
+            console.error('Failed to send email notification:', notifyResult.error);
+          }
+        }
 
         toast({
           title: 'تم قبول العرض',

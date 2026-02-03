@@ -19,15 +19,48 @@ interface MessageNotificationRequest {
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
+    const authHeader = req.headers.get("Authorization") || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Client bound to the user session (for JWT validation)
+    const supabaseAuth = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    const senderUserId = claimsData.claims.sub;
 
     const { receiverId, senderName, messagePreview }: MessageNotificationRequest = await req.json();
+
+    if (!receiverId || !messagePreview) {
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // Service client (needed to read auth user email)
+    const supabase = createClient(supabaseUrl, serviceKey);
 
     // Get receiver's profile to find their email
     const { data: profile, error: profileError } = await supabase
@@ -58,11 +91,24 @@ const handler = async (req: Request): Promise<Response> => {
     const receiverEmail = authUser.user.email;
     const receiverName = profile.full_name;
 
+    // Derive sender name from the authenticated user (prevents spoofing)
+    let effectiveSenderName = senderName;
+    try {
+      const { data: senderProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", senderUserId)
+        .maybeSingle();
+      if (senderProfile?.full_name) effectiveSenderName = senderProfile.full_name;
+    } catch {
+      // ignore
+    }
+
     // Send email notification
     const emailResponse = await resend.emails.send({
       from: "منصة تاسكاتى <noreply@resend.dev>",
       to: [receiverEmail],
-      subject: `رسالة جديدة من ${senderName}`,
+      subject: `رسالة جديدة من ${effectiveSenderName}`,
       html: `
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
@@ -87,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
               <h1>📩 رسالة جديدة</h1>
             </div>
             <p>مرحباً ${receiverName}،</p>
-            <p>لديك رسالة جديدة من <span class="sender-name">${senderName}</span></p>
+            <p>لديك رسالة جديدة من <span class="sender-name">${effectiveSenderName}</span></p>
             <div class="content">
               <p class="message-preview">${messagePreview}</p>
             </div>
@@ -104,9 +150,23 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email notification sent successfully:", emailResponse);
+    if (emailResponse?.error) {
+      console.error("Resend error:", emailResponse.error);
+      return new Response(
+        JSON.stringify({
+          error: emailResponse.error.message || "Email sending failed",
+          provider: "resend",
+        }),
+        {
+          status: 502,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
-    return new Response(JSON.stringify({ success: true }), {
+    console.log("Email notification sent:", emailResponse?.data?.id);
+
+    return new Response(JSON.stringify({ success: true, id: emailResponse?.data?.id }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
