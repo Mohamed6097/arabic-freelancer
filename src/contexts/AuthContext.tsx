@@ -109,6 +109,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (profileError) return { error: profileError };
+
+      // Send welcome email with open projects for freelancers
+      try {
+        await supabase.functions.invoke('welcome-new-user', {
+          body: {
+            userId: data.user.id,
+            userEmail: email,
+            fullName: fullName,
+            userType: userType,
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't fail signup if email fails
+      }
     }
 
     return { error: null };
