@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Briefcase, User, LogOut, MessageSquare, PlusCircle, LayoutDashboard } from 'lucide-react';
+import { Briefcase, User, LogOut, MessageSquare, PlusCircle, LayoutDashboard, CreditCard } from 'lucide-react';
 const Navbar = () => {
   const {
     user,
@@ -25,6 +25,12 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           <Link to="/projects">
             <Button variant="ghost">المشاريع</Button>
+          </Link>
+          <Link to="/payment">
+            <Button variant="ghost">
+              <CreditCard className="h-4 w-4 ml-2" />
+              الدفع
+            </Button>
           </Link>
           
           {user ? <>
