@@ -67,6 +67,9 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachment_name: string | null
+          attachment_type: string | null
+          attachment_url: string | null
           audio_duration: number | null
           audio_url: string | null
           content: string
@@ -79,6 +82,9 @@ export type Database = {
           sender_id: string
         }
         Insert: {
+          attachment_name?: string | null
+          attachment_type?: string | null
+          attachment_url?: string | null
           audio_duration?: number | null
           audio_url?: string | null
           content: string
@@ -91,6 +97,9 @@ export type Database = {
           sender_id: string
         }
         Update: {
+          attachment_name?: string | null
+          attachment_type?: string | null
+          attachment_url?: string | null
           audio_duration?: number | null
           audio_url?: string | null
           content?: string
@@ -126,6 +135,36 @@ export type Database = {
           },
         ]
       }
+      payment_receipts: {
+        Row: {
+          created_at: string
+          id: string
+          receipt_name: string
+          receipt_url: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          receipt_name: string
+          receipt_url: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          receipt_name?: string
+          receipt_url?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -134,6 +173,7 @@ export type Database = {
           full_name: string
           hourly_rate: number | null
           id: string
+          phone_number: string | null
           skills: string[] | null
           updated_at: string
           user_id: string
@@ -146,6 +186,7 @@ export type Database = {
           full_name: string
           hourly_rate?: number | null
           id?: string
+          phone_number?: string | null
           skills?: string[] | null
           updated_at?: string
           user_id: string
@@ -158,6 +199,7 @@ export type Database = {
           full_name?: string
           hourly_rate?: number | null
           id?: string
+          phone_number?: string | null
           skills?: string[] | null
           updated_at?: string
           user_id?: string
