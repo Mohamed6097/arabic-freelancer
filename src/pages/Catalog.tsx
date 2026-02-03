@@ -99,6 +99,9 @@ const Catalog = () => {
 
   const isClient = profile?.user_type === 'client';
   const isFreelancer = profile?.user_type === 'freelancer';
+  
+  // Currency based on user type
+  const currency = isFreelancer ? 'جنيه مصري' : 'ريال';
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -150,7 +153,7 @@ const Catalog = () => {
                     <span className="text-3xl font-bold text-primary">
                       {isClient ? service.clientPrice : service.freelancerPrice}
                     </span>
-                    <span className="text-muted-foreground">ريال</span>
+                    <span className="text-muted-foreground">{currency}</span>
                     {service.unit && (
                       <span className="text-sm text-muted-foreground">
                         {service.unit}
@@ -165,7 +168,7 @@ const Catalog = () => {
                         {isClient 
                           ? service.alternative.clientPrice 
                           : service.alternative.freelancerPrice
-                        } ريال
+                        } {currency}
                       </span>
                     </div>
                   )}

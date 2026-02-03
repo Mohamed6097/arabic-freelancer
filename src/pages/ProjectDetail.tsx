@@ -11,7 +11,18 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/layout/Navbar';
-import { Calendar, DollarSign, Clock, User, Send, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, DollarSign, Clock, User, Send, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { sendMessageEmailNotification } from '@/lib/messageEmailNotification';
@@ -257,6 +268,30 @@ const ProjectDetail = () => {
     fetchProject();
   };
 
+  const handleDeleteProject = async () => {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء حذف المشروع',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'تم حذف المشروع',
+    });
+    navigate('/projects');
+  };
+
+  // Currency based on user type
+  const currency = profile?.user_type === 'freelancer' ? 'جنيه مصري' : 'ريال';
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
@@ -298,9 +333,52 @@ const ProjectDetail = () => {
                       </span>
                     </CardDescription>
                   </div>
-                  <Badge variant={project.status === 'open' ? 'default' : 'secondary'}>
-                    {project.status === 'open' ? 'مفتوح' : project.status === 'in_progress' ? 'قيد التنفيذ' : 'مكتمل'}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={project.status === 'open' ? 'default' : 'secondary'}>
+                      {project.status === 'open' ? 'مفتوح' : project.status === 'in_progress' ? 'قيد التنفيذ' : 'مكتمل'}
+                    </Badge>
+                    {isOwner && (
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => navigate(`/projects/${id}/edit`)}
+                          title="تعديل المشروع"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive"
+                              title="حذف المشروع"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent dir="rtl">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>حذف المشروع</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                هل أنت متأكد من حذف هذا المشروع؟ لا يمكن التراجع عن هذا الإجراء.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className="flex-row-reverse gap-2">
+                              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={handleDeleteProject}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                حذف
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -309,7 +387,7 @@ const ProjectDetail = () => {
                   {project.budget_min && project.budget_max && (
                     <div className="flex items-center gap-1">
                       <DollarSign className="h-4 w-4 text-primary" />
-                      <span>${project.budget_min} - ${project.budget_max}</span>
+                      <span>{project.budget_min} - {project.budget_max} {currency}</span>
                     </div>
                   )}
                   {project.deadline && (
@@ -374,7 +452,7 @@ const ProjectDetail = () => {
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <DollarSign className="h-4 w-4" />
-                              ${proposal.proposed_budget}
+                              {proposal.proposed_budget} {currency}
                             </span>
                             <span className="flex items-center gap-1">
                               <Clock className="h-4 w-4" />
@@ -438,7 +516,7 @@ const ProjectDetail = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>الميزانية المقترحة ($)</Label>
+                          <Label>الميزانية المقترحة ({currency})</Label>
                           <Input
                             type="number"
                             placeholder="500"

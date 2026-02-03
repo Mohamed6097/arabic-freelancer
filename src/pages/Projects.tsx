@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,10 +41,14 @@ const categories = [
 ];
 
 const Projects = () => {
+  const { profile } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('الكل');
+  
+  // Currency based on user type
+  const currency = profile?.user_type === 'freelancer' ? 'جنيه مصري' : 'ريال';
 
   useEffect(() => {
     fetchProjects();
@@ -154,7 +159,7 @@ const Projects = () => {
                         {project.budget_min && project.budget_max && (
                           <div className="flex items-center gap-1 text-primary">
                             <DollarSign className="h-4 w-4" />
-                            <span>${project.budget_min} - ${project.budget_max}</span>
+                            <span>{project.budget_min} - {project.budget_max} {currency}</span>
                           </div>
                         )}
                         {project.deadline && (
