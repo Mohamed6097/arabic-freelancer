@@ -15,6 +15,8 @@ import AttachmentButton from '@/components/chat/AttachmentButton';
 import IncomingCallModal from '@/components/chat/IncomingCallModal';
 import CallScreen from '@/components/chat/CallScreen';
 import { useWebRTC } from '@/hooks/useWebRTC';
+import { useToast } from '@/hooks/use-toast';
+import { containsPhoneNumber, getPhoneBlockMessage } from '@/lib/phoneValidator';
 import { Send, MessageSquare, Search, FileIcon, Image as ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -56,6 +58,7 @@ const Messages = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, profile, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -284,6 +287,16 @@ const Messages = () => {
     e.preventDefault();
     if (!newMessage.trim() || !profile || !selectedConversation) return;
 
+    // Check for phone numbers
+    if (containsPhoneNumber(newMessage)) {
+      toast({
+        title: 'غير مسموح',
+        description: getPhoneBlockMessage(),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSending(true);
 
     await supabase.from('messages').insert({
@@ -479,6 +492,7 @@ const Messages = () => {
                       {messages.map((msg) => (
                         <MessageBubble
                           key={msg.id}
+                          id={msg.id}
                           content={msg.content}
                           messageType={msg.message_type as 'text' | 'voice' | 'attachment'}
                           audioUrl={msg.audio_url}
@@ -489,6 +503,7 @@ const Messages = () => {
                           timestamp={msg.created_at}
                           isOwn={msg.sender_id === profile?.id}
                           isRead={msg.is_read}
+                          onUpdate={fetchMessages}
                         />
                       ))}
                       <div ref={messagesEndRef} />
