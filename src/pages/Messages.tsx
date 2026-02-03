@@ -6,7 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import Navbar from '@/components/layout/Navbar';
 import ChatHeader from '@/components/chat/ChatHeader';
 import MessageBubble from '@/components/chat/MessageBubble';
@@ -17,7 +16,7 @@ import CallScreen from '@/components/chat/CallScreen';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useToast } from '@/hooks/use-toast';
 import { containsPhoneNumber, getPhoneBlockMessage } from '@/lib/phoneValidator';
-import { Send, MessageSquare, Search, FileIcon, Image as ImageIcon } from 'lucide-react';
+import { Send, MessageSquare, Search, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -59,7 +58,13 @@ const Messages = () => {
   const [searchParams] = useSearchParams();
   const { user, profile, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isAtBottomRef = useRef(true);
+  const forceScrollToBottomRef = useRef(true);
+  const oldestCursorRef = useRef<string | null>(null);
+  const loadingMoreLockRef = useRef(false);
+
+  const PAGE_SIZE = 30;
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -69,6 +74,10 @@ const Messages = () => {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showMobileChat, setShowMobileChat] = useState(false);
+
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   
   // Call states
   const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null);
@@ -121,14 +130,34 @@ const Messages = () => {
 
   useEffect(() => {
     if (selectedConversation && profile) {
-      fetchMessages();
+      // Reset per-conversation scroll/pagination state
+      setMessages([]);
+      setHasMoreMessages(true);
+      setLoadingMore(false);
+      setShowScrollToBottom(false);
+      oldestCursorRef.current = null;
+      isAtBottomRef.current = true;
+      forceScrollToBottomRef.current = true;
+
+      fetchMessages({ reset: true });
       markMessagesAsRead();
     }
   }, [selectedConversation, profile]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // WhatsApp-like behavior: only auto-scroll if user is already at bottom
+    // or when we explicitly force it (e.g., switching conversation / sending message)
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    if (forceScrollToBottomRef.current || isAtBottomRef.current) {
+      const behavior: ScrollBehavior = forceScrollToBottomRef.current ? 'auto' : 'smooth';
+      forceScrollToBottomRef.current = false;
+      requestAnimationFrame(() => {
+        el.scrollTo({ top: el.scrollHeight, behavior });
+      });
+    }
+  }, [messages.length, selectedConversation?.id]);
 
   // Realtime subscription
   useEffect(() => {
@@ -165,8 +194,10 @@ const Messages = () => {
     };
   }, [profile, selectedConversation]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior });
   };
 
   const fetchConversations = async () => {
@@ -244,21 +275,93 @@ const Messages = () => {
     setLoading(false);
   };
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (opts?: { reset?: boolean }) => {
     if (!profile || !selectedConversation) return;
 
+    // Load latest messages page (DESC -> reverse to display ASC)
     const { data } = await supabase
       .from('messages')
       .select('*')
       .or(
         `and(sender_id.eq.${profile.id},receiver_id.eq.${selectedConversation.id}),and(sender_id.eq.${selectedConversation.id},receiver_id.eq.${profile.id})`
       )
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false })
+      .limit(PAGE_SIZE);
 
-    if (data) {
-      setMessages(data as Message[]);
+    const batch = (data as Message[] | null) ?? [];
+    const ordered = batch.slice().reverse();
+    setMessages(ordered);
+    oldestCursorRef.current = ordered[0]?.created_at ?? null;
+    setHasMoreMessages(batch.length === PAGE_SIZE);
+
+    if (opts?.reset) {
+      forceScrollToBottomRef.current = true;
     }
   };
+
+  const loadOlderMessages = useCallback(async () => {
+    if (!profile || !selectedConversation) return;
+    if (!hasMoreMessages || loadingMore || loadingMoreLockRef.current) return;
+    if (!oldestCursorRef.current) return;
+
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    loadingMoreLockRef.current = true;
+    setLoadingMore(true);
+    isAtBottomRef.current = false;
+    setShowScrollToBottom(true);
+
+    const prevScrollHeight = el.scrollHeight;
+    const prevScrollTop = el.scrollTop;
+
+    try {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .or(
+          `and(sender_id.eq.${profile.id},receiver_id.eq.${selectedConversation.id}),and(sender_id.eq.${selectedConversation.id},receiver_id.eq.${profile.id})`
+        )
+        .lt('created_at', oldestCursorRef.current)
+        .order('created_at', { ascending: false })
+        .limit(PAGE_SIZE);
+
+      const batch = (data as Message[] | null) ?? [];
+      const ordered = batch.slice().reverse();
+
+      if (ordered.length > 0) {
+        oldestCursorRef.current = ordered[0]?.created_at ?? oldestCursorRef.current;
+        setMessages((prev) => [...ordered, ...prev]);
+      }
+
+      setHasMoreMessages(batch.length === PAGE_SIZE);
+
+      // Preserve scroll position after prepending messages
+      requestAnimationFrame(() => {
+        const newScrollHeight = el.scrollHeight;
+        el.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
+      });
+    } finally {
+      setLoadingMore(false);
+      loadingMoreLockRef.current = false;
+    }
+  }, [profile, selectedConversation, hasMoreMessages, loadingMore]);
+
+  const handleMessagesScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const atBottom = remaining < 80;
+    const atTop = el.scrollTop < 40;
+
+    isAtBottomRef.current = atBottom;
+    setShowScrollToBottom(!atBottom);
+
+    if (atTop) {
+      loadOlderMessages();
+    }
+  }, [loadOlderMessages]);
 
   const markMessagesAsRead = async () => {
     if (!profile || !selectedConversation) return;
@@ -298,6 +401,9 @@ const Messages = () => {
     }
 
     setSending(true);
+
+    // After sending, we want to jump to the latest message like WhatsApp
+    forceScrollToBottomRef.current = true;
 
     await supabase.from('messages').insert({
       sender_id: profile.id,
@@ -398,7 +504,7 @@ const Messages = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden" dir="rtl">
+    <div className="min-h-screen h-[100dvh] flex flex-col bg-background overflow-hidden" dir="rtl">
       <Navbar />
       
       <main className="flex-1 container py-4 lg:py-8 overflow-hidden">
@@ -421,7 +527,7 @@ const Messages = () => {
               </div>
             </div>
             
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto overscroll-contain">
               {loading ? (
                 <div className="space-y-4 p-4">
                   {[1, 2, 3].map((i) => (
@@ -471,7 +577,7 @@ const Messages = () => {
                   </button>
                 ))
               )}
-            </ScrollArea>
+            </div>
           </div>
 
           {/* Chat Area */}
@@ -486,9 +592,20 @@ const Messages = () => {
                   onVideoCall={handleVideoCall}
                 />
                 
-                <CardContent className="flex-1 flex flex-col p-0 overflow-hidden" style={{ minHeight: 0 }}>
-                  <div className="flex-1 overflow-y-auto">
+                <CardContent className="relative flex-1 flex flex-col p-0 overflow-hidden" style={{ minHeight: 0 }}>
+                  <div
+                    ref={scrollContainerRef}
+                    onScroll={handleMessagesScroll}
+                    className="flex-1 overflow-y-auto overscroll-contain"
+                  >
                     <div className="p-4 space-y-3">
+                      {hasMoreMessages && (
+                        <div className="flex justify-center py-2">
+                          <span className="text-xs text-muted-foreground">
+                            {loadingMore ? 'جارٍ تحميل رسائل أقدم...' : 'اسحب للأعلى لعرض رسائل أقدم'}
+                          </span>
+                        </div>
+                      )}
                       {messages.map((msg) => (
                         <MessageBubble
                           key={msg.id}
@@ -506,9 +623,22 @@ const Messages = () => {
                           onUpdate={fetchMessages}
                         />
                       ))}
-                      <div ref={messagesEndRef} />
                     </div>
                   </div>
+
+                  {showScrollToBottom && (
+                    <div className="absolute right-4 bottom-24 z-10">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon"
+                        className="rounded-full shadow-md"
+                        onClick={() => scrollToBottom('smooth')}
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                   
                   <form onSubmit={handleSendMessage} className="p-4 border-t flex gap-2 bg-card">
                     <VoiceMessageRecorder 
