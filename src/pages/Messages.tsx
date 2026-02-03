@@ -745,48 +745,68 @@ const Messages = () => {
                   <div
                     ref={scrollContainerRef}
                     onScroll={handleMessagesScroll}
-                    className="flex-1 overflow-y-auto overscroll-contain scroll-smooth min-h-0"
-                    style={{ scrollBehavior: 'smooth' }}
+                    className="flex-1 overflow-y-auto overscroll-contain min-h-0"
                   >
-                    <div className="p-4 space-y-3">
+                    <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                      {/* Load more indicator */}
                       {hasMoreMessages && (
-                        <div className="flex justify-center py-2">
-                          <span className="text-xs text-muted-foreground">
-                            {loadingMore ? 'جارٍ تحميل رسائل أقدم...' : 'اسحب للأعلى لعرض رسائل أقدم'}
-                          </span>
+                        <div className="flex justify-center py-3">
+                          {loadingMore ? (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
+                              <span className="text-xs">جارٍ تحميل رسائل أقدم...</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
+                              <ChevronDown className="h-3 w-3 rotate-180" />
+                              <span className="text-xs">اسحب للأعلى لعرض رسائل أقدم</span>
+                            </div>
+                          )}
                         </div>
                       )}
-                      {messages.map((msg) => (
-                        <MessageBubble
-                          key={msg.id}
-                          id={msg.id}
-                          content={msg.content}
-                          messageType={msg.message_type as 'text' | 'voice' | 'attachment'}
-                          audioUrl={msg.audio_url}
-                          audioDuration={msg.audio_duration}
-                          attachmentUrl={msg.attachment_url}
-                          attachmentName={msg.attachment_name}
-                          attachmentType={msg.attachment_type}
-                          timestamp={msg.created_at}
-                          isOwn={msg.sender_id === profile?.id}
-                          isRead={msg.is_read}
-                          isDeleted={msg.is_deleted}
-                          onUpdate={fetchMessages}
-                        />
-                      ))}
+                      
+                      {/* Messages */}
+                      {messages.length === 0 && !loading ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <MessageSquare className="h-12 w-12 text-muted-foreground mb-3" />
+                          <p className="text-muted-foreground text-sm">لا توجد رسائل بعد</p>
+                          <p className="text-muted-foreground text-xs mt-1">ابدأ المحادثة الآن!</p>
+                        </div>
+                      ) : (
+                        messages.map((msg) => (
+                          <MessageBubble
+                            key={msg.id}
+                            id={msg.id}
+                            content={msg.content}
+                            messageType={msg.message_type as 'text' | 'voice' | 'attachment'}
+                            audioUrl={msg.audio_url}
+                            audioDuration={msg.audio_duration}
+                            attachmentUrl={msg.attachment_url}
+                            attachmentName={msg.attachment_name}
+                            attachmentType={msg.attachment_type}
+                            timestamp={msg.created_at}
+                            isOwn={msg.sender_id === profile?.id}
+                            isRead={msg.is_read}
+                            isDeleted={msg.is_deleted}
+                            onUpdate={fetchMessages}
+                          />
+                        ))
+                      )}
                     </div>
                   </div>
 
+                  {/* Scroll to bottom button */}
                   {showScrollToBottom && (
-                    <div className="absolute right-4 bottom-24 z-10">
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-20 sm:bottom-24 z-10">
                       <Button
                         type="button"
                         variant="secondary"
-                        size="icon"
-                        className="rounded-full shadow-md"
+                        size="sm"
+                        className="rounded-full shadow-lg border flex items-center gap-1 px-3"
                         onClick={() => scrollToBottom('smooth')}
                       >
                         <ChevronDown className="h-4 w-4" />
+                        <span className="text-xs">الرسائل الجديدة</span>
                       </Button>
                     </div>
                   )}
