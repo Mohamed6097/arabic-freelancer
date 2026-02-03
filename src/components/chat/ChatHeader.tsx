@@ -26,7 +26,6 @@ interface ChatHeaderProps {
   onBack?: () => void;
   onVoiceCall: () => void;
   onVideoCall: () => void;
-  // Project completion props
   showCompleteButton?: boolean;
   hasConfirmedComplete?: boolean;
   otherPartyConfirmed?: boolean;
@@ -59,40 +58,40 @@ const ChatHeader = ({
   };
 
   return (
-    <div className="flex items-center justify-between p-4 border-b bg-card">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between p-2 sm:p-4 border-b bg-card">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {onBack && (
-          <Button variant="ghost" size="icon" onClick={onBack} className="lg:hidden">
-            <ArrowRight className="h-5 w-5" />
+          <Button variant="ghost" size="icon" onClick={onBack} className="lg:hidden h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
+            <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
         )}
-        <Avatar className="h-10 w-10">
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
           <AvatarImage src={avatar || ''} />
           <AvatarFallback>{name.charAt(0)}</AvatarFallback>
         </Avatar>
-        <div>
-          <p className="font-semibold">{name}</p>
-          <p className="text-xs text-muted-foreground">
+        <div className="min-w-0">
+          <p className="font-semibold text-sm sm:text-base truncate">{name}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">
             {isProjectCompleted ? 'مشروع مكتمل ✓' : 'متصل'}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
         {showCompleteButton && !isProjectCompleted && (
           <Tooltip>
             <TooltipTrigger asChild>
               {hasConfirmedComplete ? (
                 <Button 
                   variant="ghost" 
-                  size="icon" 
+                  size="icon"
                   disabled
                   className={cn(
-                    "text-green-600",
+                    "h-8 w-8 sm:h-10 sm:w-10 text-green-600",
                     otherPartyConfirmed && "animate-pulse"
                   )}
                 >
-                  <CheckCircle className="h-5 w-5 fill-green-100" />
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 fill-green-100" />
                 </Button>
               ) : (
                 <AlertDialog>
@@ -101,13 +100,14 @@ const ChatHeader = ({
                       variant="ghost" 
                       size="icon"
                       className={cn(
+                        "h-8 w-8 sm:h-10 sm:w-10",
                         otherPartyConfirmed && "text-green-600 animate-pulse"
                       )}
                     >
                       {confirming ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                       ) : (
-                        <CheckCircle className="h-5 w-5" />
+                        <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                       )}
                     </Button>
                   </AlertDialogTrigger>
@@ -159,11 +159,11 @@ const ChatHeader = ({
           </Tooltip>
         )}
         
-        <Button variant="ghost" size="icon" onClick={onVoiceCall}>
-          <Phone className="h-5 w-5" />
+        <Button variant="ghost" size="icon" onClick={onVoiceCall} className="h-8 w-8 sm:h-10 sm:w-10">
+          <Phone className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={onVideoCall}>
-          <Video className="h-5 w-5" />
+        <Button variant="ghost" size="icon" onClick={onVideoCall} className="h-8 w-8 sm:h-10 sm:w-10">
+          <Video className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
       </div>
     </div>
