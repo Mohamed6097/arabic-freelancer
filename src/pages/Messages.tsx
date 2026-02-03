@@ -486,9 +486,9 @@ const Messages = () => {
                   onVideoCall={handleVideoCall}
                 />
                 
-                <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-                  <ScrollArea className="flex-1 p-4">
-                    <div className="space-y-3">
+                <CardContent className="flex-1 flex flex-col p-0 overflow-hidden min-h-0">
+                  <ScrollArea className="flex-1 h-full">
+                    <div className="p-4 space-y-3">
                       {messages.map((msg) => (
                         <MessageBubble
                           key={msg.id}
