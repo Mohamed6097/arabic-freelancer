@@ -215,10 +215,12 @@ export type Database = {
           budget_max: number | null
           budget_min: number | null
           category: string
+          client_confirmed_complete: boolean
           client_id: string
           created_at: string
           deadline: string | null
           description: string
+          freelancer_confirmed_complete: boolean
           id: string
           status: Database["public"]["Enums"]["project_status"]
           title: string
@@ -228,10 +230,12 @@ export type Database = {
           budget_max?: number | null
           budget_min?: number | null
           category: string
+          client_confirmed_complete?: boolean
           client_id: string
           created_at?: string
           deadline?: string | null
           description: string
+          freelancer_confirmed_complete?: boolean
           id?: string
           status?: Database["public"]["Enums"]["project_status"]
           title: string
@@ -241,10 +245,12 @@ export type Database = {
           budget_max?: number | null
           budget_min?: number | null
           category?: string
+          client_confirmed_complete?: boolean
           client_id?: string
           created_at?: string
           deadline?: string | null
           description?: string
+          freelancer_confirmed_complete?: boolean
           id?: string
           status?: Database["public"]["Enums"]["project_status"]
           title?: string

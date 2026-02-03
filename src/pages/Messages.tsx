@@ -29,6 +29,16 @@ interface Conversation {
   lastMessageTime: string;
   unreadCount: number;
   lastMessageType: string;
+  projectId?: string | null;
+}
+
+interface SharedProject {
+  id: string;
+  status: string;
+  client_id: string;
+  client_confirmed_complete: boolean;
+  freelancer_confirmed_complete: boolean;
+  freelancer_id?: string;
 }
 
 interface Message {
@@ -80,6 +90,7 @@ const Messages = () => {
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [sharedProject, setSharedProject] = useState<SharedProject | null>(null);
   
   // Call states
   const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null);
@@ -137,12 +148,14 @@ const Messages = () => {
       setHasMoreMessages(true);
       setLoadingMore(false);
       setShowScrollToBottom(false);
+      setSharedProject(null);
       oldestCursorRef.current = null;
       isAtBottomRef.current = true;
       forceScrollToBottomRef.current = true;
 
       fetchMessages({ reset: true });
       markMessagesAsRead();
+      fetchSharedProject();
     }
   }, [selectedConversation, profile]);
 
@@ -378,6 +391,107 @@ const Messages = () => {
     fetchConversations();
   };
 
+  const fetchSharedProject = async () => {
+    if (!profile || !selectedConversation) return;
+
+    // Find projects where the current user is client and other is freelancer (accepted proposal)
+    // OR current user is freelancer and other is client
+    const { data: projectAsClient } = await supabase
+      .from('projects')
+      .select('id, status, client_id, client_confirmed_complete, freelancer_confirmed_complete')
+      .eq('client_id', profile.id)
+      .eq('status', 'in_progress')
+      .limit(1);
+
+    if (projectAsClient && projectAsClient.length > 0) {
+      // Check if there's an accepted proposal from the selected conversation user
+      const { data: proposal } = await supabase
+        .from('proposals')
+        .select('id, freelancer_id')
+        .eq('project_id', projectAsClient[0].id)
+        .eq('freelancer_id', selectedConversation.id)
+        .eq('status', 'accepted')
+        .single();
+
+      if (proposal) {
+        setSharedProject({
+          ...projectAsClient[0],
+          freelancer_id: proposal.freelancer_id,
+        });
+        return;
+      }
+    }
+
+    // Check if current user is freelancer on a project owned by the conversation partner
+    const { data: projectAsFreelancer } = await supabase
+      .from('projects')
+      .select('id, status, client_id, client_confirmed_complete, freelancer_confirmed_complete')
+      .eq('client_id', selectedConversation.id)
+      .eq('status', 'in_progress')
+      .limit(1);
+
+    if (projectAsFreelancer && projectAsFreelancer.length > 0) {
+      // Check if current user has an accepted proposal
+      const { data: proposal } = await supabase
+        .from('proposals')
+        .select('id, freelancer_id')
+        .eq('project_id', projectAsFreelancer[0].id)
+        .eq('freelancer_id', profile.id)
+        .eq('status', 'accepted')
+        .single();
+
+      if (proposal) {
+        setSharedProject({
+          ...projectAsFreelancer[0],
+          freelancer_id: proposal.freelancer_id,
+        });
+        return;
+      }
+    }
+
+    setSharedProject(null);
+  };
+
+  const handleConfirmProjectComplete = async () => {
+    if (!profile || !sharedProject) return;
+
+    const isClient = sharedProject.client_id === profile.id;
+    const updateField = isClient ? 'client_confirmed_complete' : 'freelancer_confirmed_complete';
+
+    const { error } = await supabase
+      .from('projects')
+      .update({ [updateField]: true })
+      .eq('id', sharedProject.id);
+
+    if (error) {
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء تأكيد الإتمام',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Refetch project to get updated status
+    await fetchSharedProject();
+
+    const bothConfirmed = isClient 
+      ? sharedProject.freelancer_confirmed_complete 
+      : sharedProject.client_confirmed_complete;
+
+    if (bothConfirmed) {
+      toast({
+        title: 'تم إتمام المشروع! 🎉',
+        description: 'تهانينا! تم إتمام المشروع بنجاح وسيظهر في المشاريع المكتملة.',
+      });
+    } else {
+      toast({
+        title: 'تم تأكيد الإتمام',
+        description: 'في انتظار تأكيد الطرف الآخر',
+      });
+    }
+  };
+
   const sendEmailNotification = async (receiverId: string, senderName: string, messagePreview: string) => {
     const result = await sendMessageEmailNotification({ receiverId, senderName, messagePreview });
     if (result.ok === false) {
@@ -608,6 +722,23 @@ const Messages = () => {
                   onBack={() => setShowMobileChat(false)}
                   onVoiceCall={handleVoiceCall}
                   onVideoCall={handleVideoCall}
+                  showCompleteButton={!!sharedProject && sharedProject.status === 'in_progress'}
+                  hasConfirmedComplete={
+                    sharedProject
+                      ? sharedProject.client_id === profile?.id
+                        ? sharedProject.client_confirmed_complete
+                        : sharedProject.freelancer_confirmed_complete
+                      : false
+                  }
+                  otherPartyConfirmed={
+                    sharedProject
+                      ? sharedProject.client_id === profile?.id
+                        ? sharedProject.freelancer_confirmed_complete
+                        : sharedProject.client_confirmed_complete
+                      : false
+                  }
+                  onConfirmComplete={handleConfirmProjectComplete}
+                  isProjectCompleted={sharedProject?.status === 'completed'}
                 />
                 
                 <CardContent className="relative flex-1 flex flex-col p-0 overflow-hidden min-h-0">
