@@ -38,6 +38,7 @@ interface Message {
   sender_id: string;
   receiver_id: string;
   is_read: boolean;
+  is_deleted: boolean;
   message_type: string;
   audio_url: string | null;
   audio_duration: number | null;
@@ -637,6 +638,7 @@ const Messages = () => {
                           timestamp={msg.created_at}
                           isOwn={msg.sender_id === profile?.id}
                           isRead={msg.is_read}
+                          isDeleted={msg.is_deleted}
                           onUpdate={fetchMessages}
                         />
                       ))}

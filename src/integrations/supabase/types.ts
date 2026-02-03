@@ -75,6 +75,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_deleted: boolean
           is_read: boolean
           message_type: string
           project_id: string | null
@@ -90,6 +91,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_deleted?: boolean
           is_read?: boolean
           message_type?: string
           project_id?: string | null
@@ -105,6 +107,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_deleted?: boolean
           is_read?: boolean
           message_type?: string
           project_id?: string | null
