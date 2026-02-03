@@ -636,13 +636,13 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen h-[100dvh] flex flex-col bg-background overflow-hidden" dir="rtl">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background overflow-hidden" dir="rtl">
       <Navbar />
       
-      <main className="flex-1 container px-0 sm:px-4 py-0 sm:py-4 lg:py-8 overflow-hidden">
-        <div className="grid gap-0 lg:gap-4 lg:grid-cols-3 h-full bg-card sm:rounded-xl overflow-hidden sm:shadow-lg sm:border min-h-0">
+      <main className="flex-1 container max-w-full lg:max-w-7xl px-0 sm:px-4 py-0 sm:py-4 lg:py-8 overflow-hidden min-h-0">
+        <div className="flex flex-col lg:grid lg:gap-4 lg:grid-cols-3 h-full bg-card sm:rounded-xl overflow-hidden sm:shadow-lg sm:border min-h-0">
           {/* Conversations List */}
-          <div className={`lg:col-span-1 border-l flex flex-col h-full ${showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
+          <div className={`lg:col-span-1 border-l flex flex-col min-h-0 ${showMobileChat ? 'hidden lg:flex' : 'flex flex-1'}`}>
             <div className="p-3 sm:p-4 border-b">
               <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
@@ -713,7 +713,7 @@ const Messages = () => {
           </div>
 
           {/* Chat Area */}
-          <Card className={`lg:col-span-2 flex flex-col border-0 rounded-none min-h-0 h-full ${!showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
+          <Card className={`lg:col-span-2 flex flex-col border-0 rounded-none min-h-0 ${!showMobileChat ? 'hidden lg:flex' : 'flex flex-1'}`}>
             {selectedConversation ? (
               <>
                 <ChatHeader
