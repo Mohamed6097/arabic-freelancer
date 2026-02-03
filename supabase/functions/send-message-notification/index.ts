@@ -106,7 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email notification
     const emailResponse = await resend.emails.send({
-      from: "منصة تاسكاتى <noreply@resend.dev>",
+      from: "منصة تاسكاتى <noreply@arabicfreelancer.dev>",
       to: [receiverEmail],
       subject: `رسالة جديدة من ${effectiveSenderName}`,
       html: `
