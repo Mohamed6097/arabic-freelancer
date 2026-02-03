@@ -11,10 +11,11 @@ import Navbar from '@/components/layout/Navbar';
 import ChatHeader from '@/components/chat/ChatHeader';
 import MessageBubble from '@/components/chat/MessageBubble';
 import VoiceMessageRecorder from '@/components/chat/VoiceMessageRecorder';
+import AttachmentButton from '@/components/chat/AttachmentButton';
 import IncomingCallModal from '@/components/chat/IncomingCallModal';
 import CallScreen from '@/components/chat/CallScreen';
 import { useWebRTC } from '@/hooks/useWebRTC';
-import { Send, MessageSquare, Search } from 'lucide-react';
+import { Send, MessageSquare, Search, FileIcon, Image as ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -38,6 +39,9 @@ interface Message {
   message_type: string;
   audio_url: string | null;
   audio_duration: number | null;
+  attachment_url: string | null;
+  attachment_name: string | null;
+  attachment_type: string | null;
 }
 
 interface IncomingCallData {
@@ -266,6 +270,16 @@ const Messages = () => {
     fetchConversations();
   };
 
+  const sendEmailNotification = async (receiverId: string, senderName: string, messagePreview: string) => {
+    try {
+      await supabase.functions.invoke('send-message-notification', {
+        body: { receiverId, senderName, messagePreview }
+      });
+    } catch (error) {
+      console.error('Failed to send email notification:', error);
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !profile || !selectedConversation) return;
@@ -278,6 +292,9 @@ const Messages = () => {
       content: newMessage.trim(),
       message_type: 'text',
     });
+
+    // Send email notification
+    sendEmailNotification(selectedConversation.id, profile.full_name, newMessage.trim());
 
     setNewMessage('');
     setSending(false);
@@ -463,9 +480,12 @@ const Messages = () => {
                         <MessageBubble
                           key={msg.id}
                           content={msg.content}
-                          messageType={msg.message_type as 'text' | 'voice'}
+                          messageType={msg.message_type as 'text' | 'voice' | 'attachment'}
                           audioUrl={msg.audio_url}
                           audioDuration={msg.audio_duration}
+                          attachmentUrl={msg.attachment_url}
+                          attachmentName={msg.attachment_name}
+                          attachmentType={msg.attachment_type}
                           timestamp={msg.created_at}
                           isOwn={msg.sender_id === profile?.id}
                           isRead={msg.is_read}
@@ -478,6 +498,12 @@ const Messages = () => {
                   <form onSubmit={handleSendMessage} className="p-4 border-t flex gap-2 bg-card">
                     <VoiceMessageRecorder 
                       onSend={handleSendVoiceMessage}
+                      disabled={sending}
+                    />
+                    <AttachmentButton
+                      profileId={profile?.id || ''}
+                      receiverId={selectedConversation.id}
+                      onSent={fetchMessages}
                       disabled={sending}
                     />
                     <Input

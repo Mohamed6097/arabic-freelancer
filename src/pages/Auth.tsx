@@ -8,11 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Briefcase, User, ArrowRight } from 'lucide-react';
+import { Briefcase, User, ArrowRight, Phone } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('البريد الإلكتروني غير صالح');
 const passwordSchema = z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+const phoneSchema = z.string().min(10, 'رقم الهاتف يجب أن يكون 10 أرقام على الأقل').regex(/^[0-9+]+$/, 'رقم الهاتف غير صالح');
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [userType, setUserType] = useState<'client' | 'freelancer'>('freelancer');
 
   useEffect(() => {
@@ -69,6 +71,7 @@ const Auth = () => {
     try {
       emailSchema.parse(email);
       passwordSchema.parse(password);
+      phoneSchema.parse(phoneNumber);
       if (!fullName.trim()) throw new Error('الاسم مطلوب');
     } catch (err) {
       toast({
@@ -80,7 +83,7 @@ const Auth = () => {
     }
 
     setIsLoading(true);
-    const { error } = await signUp(email, password, fullName, userType);
+    const { error } = await signUp(email, password, fullName, userType, phoneNumber);
     setIsLoading(false);
 
     if (error) {
@@ -189,6 +192,21 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">رقم الهاتف</Label>
+                  <div className="relative">
+                    <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="05xxxxxxxx"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="pr-10"
+                      dir="ltr"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-3">
                   <Label>نوع الحساب</Label>
