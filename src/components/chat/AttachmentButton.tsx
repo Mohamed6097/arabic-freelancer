@@ -3,15 +3,17 @@ import { Button } from '@/components/ui/button';
 import { Paperclip, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { sendMessageEmailNotification } from '@/lib/messageEmailNotification';
 
 interface AttachmentButtonProps {
   profileId: string;
+  senderName: string;
   receiverId: string;
   onSent: () => void;
   disabled?: boolean;
 }
 
-const AttachmentButton = ({ profileId, receiverId, onSent, disabled }: AttachmentButtonProps) => {
+const AttachmentButton = ({ profileId, senderName, receiverId, onSent, disabled }: AttachmentButtonProps) => {
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,15 +64,33 @@ const AttachmentButton = ({ profileId, receiverId, onSent, disabled }: Attachmen
       else if (file.type.includes('document') || file.type.includes('word')) fileType = 'document';
 
       // Insert message with attachment
-      await supabase.from('messages').insert({
+      const messagePreview = `📎 ${file.name}`;
+      const { error: insertError } = await supabase.from('messages').insert({
         sender_id: profileId,
         receiver_id: receiverId,
-        content: `📎 ${file.name}`,
+        content: messagePreview,
         message_type: 'attachment',
         attachment_url: urlData.publicUrl,
         attachment_name: file.name,
         attachment_type: fileType,
       });
+
+      if (insertError) throw insertError;
+
+      const notifyResult = await sendMessageEmailNotification({
+        receiverId,
+        senderName,
+        messagePreview,
+      });
+
+      if (notifyResult.ok === false) {
+        console.error('Failed to send email notification:', notifyResult.error);
+        toast({
+          title: 'تعذر إرسال إشعار البريد',
+          description: notifyResult.error,
+          variant: 'destructive',
+        });
+      }
 
       onSent();
 
