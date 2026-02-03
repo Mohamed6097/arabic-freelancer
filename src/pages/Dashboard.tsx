@@ -158,22 +158,22 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background" dir="rtl">
       <Navbar />
       
-      <main className="container py-8">
-        <div className="flex flex-col gap-6">
+      <main className="container py-4 sm:py-8">
+        <div className="flex flex-col gap-4 sm:gap-6">
           <div>
-            <h1 className="text-3xl font-bold">مرحباً، {profile?.full_name}</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold">مرحباً، {profile?.full_name}</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               {profile?.user_type === 'client' ? 'إدارة مشاريعك' : 'إدارة عروضك'}
             </p>
           </div>
 
           {profile?.user_type === 'client' ? (
             <Tabs defaultValue="all" className="w-full">
-              <TabsList>
-                <TabsTrigger value="all">جميع المشاريع</TabsTrigger>
-                <TabsTrigger value="open">مفتوحة</TabsTrigger>
-                <TabsTrigger value="in_progress">قيد التنفيذ</TabsTrigger>
-                <TabsTrigger value="completed">مكتملة</TabsTrigger>
+              <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto gap-1 p-1">
+                <TabsTrigger value="all" className="text-xs sm:text-sm py-2">جميع المشاريع</TabsTrigger>
+                <TabsTrigger value="open" className="text-xs sm:text-sm py-2">مفتوحة</TabsTrigger>
+                <TabsTrigger value="in_progress" className="text-xs sm:text-sm py-2">قيد التنفيذ</TabsTrigger>
+                <TabsTrigger value="completed" className="text-xs sm:text-sm py-2">مكتملة</TabsTrigger>
               </TabsList>
 
               {['all', 'open', 'in_progress', 'completed'].map((tab) => (
@@ -243,11 +243,11 @@ const Dashboard = () => {
             </Tabs>
           ) : (
             <Tabs defaultValue="all" className="w-full">
-              <TabsList>
-                <TabsTrigger value="all">جميع العروض</TabsTrigger>
-                <TabsTrigger value="pending">قيد المراجعة</TabsTrigger>
-                <TabsTrigger value="accepted">مقبولة</TabsTrigger>
-                <TabsTrigger value="rejected">مرفوضة</TabsTrigger>
+              <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto gap-1 p-1">
+                <TabsTrigger value="all" className="text-xs sm:text-sm py-2">جميع العروض</TabsTrigger>
+                <TabsTrigger value="pending" className="text-xs sm:text-sm py-2">قيد المراجعة</TabsTrigger>
+                <TabsTrigger value="accepted" className="text-xs sm:text-sm py-2">مقبولة</TabsTrigger>
+                <TabsTrigger value="rejected" className="text-xs sm:text-sm py-2">مرفوضة</TabsTrigger>
               </TabsList>
 
               {['all', 'pending', 'accepted', 'rejected'].map((tab) => (

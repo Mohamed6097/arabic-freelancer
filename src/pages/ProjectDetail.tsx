@@ -313,14 +313,14 @@ const ProjectDetail = () => {
     <div className="min-h-screen bg-background" dir="rtl">
       <Navbar />
       
-      <main className="container py-8">
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
+      <main className="container py-4 sm:py-8">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             <Card>
-              <CardHeader>
-                <div className="flex items-start justify-between">
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div>
-                    <CardTitle className="text-2xl">{project.title}</CardTitle>
+                    <CardTitle className="text-xl sm:text-2xl">{project.title}</CardTitle>
                     <CardDescription className="flex items-center gap-2 mt-2">
                       <Avatar className="h-6 w-6">
                         <AvatarImage src={project.profiles.avatar_url || ''} />
