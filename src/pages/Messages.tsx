@@ -526,7 +526,7 @@ const Messages = () => {
       <Navbar />
       
       <main className="flex-1 container py-4 lg:py-8 overflow-hidden">
-        <div className="grid gap-0 lg:gap-4 lg:grid-cols-3 h-full bg-card rounded-xl overflow-hidden shadow-lg border">
+        <div className="grid gap-0 lg:gap-4 lg:grid-cols-3 h-full bg-card rounded-xl overflow-hidden shadow-lg border min-h-0">
           {/* Conversations List */}
           <div className={`lg:col-span-1 border-l flex flex-col ${showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
             <div className="p-4 border-b">
@@ -599,7 +599,7 @@ const Messages = () => {
           </div>
 
           {/* Chat Area */}
-          <Card className={`lg:col-span-2 flex flex-col border-0 rounded-none ${!showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
+          <Card className={`lg:col-span-2 flex flex-col border-0 rounded-none min-h-0 h-full ${!showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
             {selectedConversation ? (
               <>
                 <ChatHeader
@@ -610,11 +610,12 @@ const Messages = () => {
                   onVideoCall={handleVideoCall}
                 />
                 
-                <CardContent className="relative flex-1 flex flex-col p-0 overflow-hidden" style={{ minHeight: 0 }}>
+                <CardContent className="relative flex-1 flex flex-col p-0 overflow-hidden min-h-0">
                   <div
                     ref={scrollContainerRef}
                     onScroll={handleMessagesScroll}
-                    className="flex-1 overflow-y-auto overscroll-contain"
+                    className="flex-1 overflow-y-auto overscroll-contain scroll-smooth min-h-0"
+                    style={{ scrollBehavior: 'smooth' }}
                   >
                     <div className="p-4 space-y-3">
                       {hasMoreMessages && (
