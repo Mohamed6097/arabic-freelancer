@@ -80,6 +80,20 @@ const NewProject = () => {
       return;
     }
 
+    // Send notification to freelancers
+    try {
+      await supabase.functions.invoke('notify-job-posted', {
+        body: {
+          projectId: data.id,
+          projectTitle: title.trim(),
+          projectCategory: category,
+          clientName: profile.full_name,
+        },
+      });
+    } catch (notifyError) {
+      console.error('Failed to notify freelancers:', notifyError);
+    }
+
     toast({
       title: 'تم إنشاء المشروع',
       description: 'يمكن للمختصين الآن تقديم عروضهم',

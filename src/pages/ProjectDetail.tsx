@@ -220,7 +220,7 @@ const ProjectDetail = () => {
         await supabase.from('messages').insert({
           sender_id: profile.id,
           receiver_id: freelancerId,
-          content: 'من فضلك ابعت تفاصيل المشروع',
+          content: 'السلام عليكم',
           project_id: id,
           message_type: 'text',
         });
