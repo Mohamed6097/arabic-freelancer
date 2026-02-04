@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Briefcase, User, LogOut, MessageSquare, PlusCircle, LayoutDashboard, CreditCard, ListOrdered, Menu } from 'lucide-react';
+import { Briefcase, User, LogOut, MessageSquare, PlusCircle, LayoutDashboard, ListOrdered, Menu } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 const Navbar = () => {
   const { user, profile, signOut } = useAuth();
@@ -28,12 +28,6 @@ const Navbar = () => {
         <Button variant="ghost" className={isMobile ? "w-full justify-start" : ""}>
           <ListOrdered className="h-4 w-4 ml-2" />
           الأسعار
-        </Button>
-      </Link>
-      <Link to="/payment" onClick={isMobile ? closeMobileMenu : undefined}>
-        <Button variant="ghost" className={isMobile ? "w-full justify-start" : ""}>
-          <CreditCard className="h-4 w-4 ml-2" />
-          الدفع
         </Button>
       </Link>
     </>
