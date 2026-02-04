@@ -65,32 +65,19 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Get all freelancers for email notifications
-    const freelancers = allUsers?.filter(u => u.user_type === 'freelancer') || [];
-
-    if (freelancers.length === 0) {
-      console.log("No freelancers found for email notifications");
-      return new Response(JSON.stringify({ success: true, sent: 0, notifications: notificationCount }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
-
-    // Get emails for all freelancers and send email notifications
+    // Send email notifications to ALL users
     let sentCount = 0;
-    for (const freelancer of freelancers) {
+    for (const user of allUsers || []) {
       try {
-        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(freelancer.id);
-
-        // Note: freelancer.id is the profile id, we need user_id
+        // Get user_id from profile to fetch email
         const { data: profileData } = await supabase
           .from("profiles")
           .select("user_id")
-          .eq("id", freelancer.id)
+          .eq("id", user.id)
           .single();
 
         if (!profileData?.user_id) {
-          console.log(`Skipping freelancer ${freelancer.id}: no user_id found`);
+          console.log(`Skipping user ${user.id}: no user_id found`);
           continue;
         }
 
@@ -104,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
         const email = userData.user.email;
 
         await resend.emails.send({
-          from: "منصة تاسكاتى <noreply@resend.dev>",
+          from: "منصة تاسكاتى <noreply@arabicfreelancer.dev>",
           to: [email],
           subject: `مشروع جديد: ${projectTitle}`,
           html: `
@@ -131,8 +118,8 @@ const handler = async (req: Request): Promise<Response> => {
                 <div class="header">
                   <h1>🆕 مشروع جديد متاح</h1>
                 </div>
-                <p>مرحباً ${freelancer.full_name}،</p>
-                <p>تم نشر مشروع جديد قد يهمك:</p>
+                <p>مرحباً ${user.full_name}،</p>
+                <p>تم نشر مشروع جديد على المنصة:</p>
                 <div class="content">
                   <p class="project-title">${projectTitle}</p>
                   <span class="project-category">${projectCategory}</span>
@@ -154,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
         sentCount++;
         console.log(`Email sent to ${email}`);
       } catch (emailError) {
-        console.error(`Failed to send email to freelancer ${freelancer.id}:`, emailError);
+        console.error(`Failed to send email to user ${user.id}:`, emailError);
       }
     }
 
