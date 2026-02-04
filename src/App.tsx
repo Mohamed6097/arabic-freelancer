@@ -11,6 +11,7 @@ import ProjectDetail from "./pages/ProjectDetail";
 import NewProject from "./pages/NewProject";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import PublicProfile from "./pages/PublicProfile";
 import Messages from "./pages/Messages";
 import Payment from "./pages/Payment";
 import Catalog from "./pages/Catalog";
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<PublicProfile />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/catalog" element={<Catalog />} />
