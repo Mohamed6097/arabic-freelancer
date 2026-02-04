@@ -194,7 +194,25 @@ const Messages = () => {
             selectedConversation &&
             (newMsg.sender_id === selectedConversation.id || newMsg.receiver_id === selectedConversation.id)
           ) {
-            setMessages((prev) => [...prev, newMsg]);
+            // Avoid duplicate if optimistic message exists
+            setMessages((prev) => {
+              const exists = prev.some(m => m.id === newMsg.id);
+              // Remove temp optimistic message if real one arrived
+              const filtered = prev.filter(m => !m.id.startsWith('temp-') || m.content !== newMsg.content);
+              if (exists) return prev;
+              return [...filtered, newMsg];
+            });
+            
+            // Auto-scroll to bottom when new message arrives (if already at bottom or it's own message)
+            if (isAtBottomRef.current || newMsg.sender_id === profile.id) {
+              requestAnimationFrame(() => {
+                const el = scrollContainerRef.current;
+                if (el) {
+                  el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+                }
+              });
+            }
+            
             if (newMsg.receiver_id === profile.id) {
               markMessagesAsRead();
             }
@@ -785,8 +803,13 @@ const Messages = () => {
                   <div
                     ref={scrollContainerRef}
                     onScroll={handleMessagesScroll}
-                    className="flex-1 overflow-y-auto overscroll-contain min-h-0 scroll-smooth will-change-scroll"
-                    style={{ WebkitOverflowScrolling: 'touch' }}
+                    className="flex-1 overflow-y-auto overscroll-contain min-h-0"
+                    style={{ 
+                      WebkitOverflowScrolling: 'touch',
+                      scrollBehavior: 'smooth',
+                      willChange: 'scroll-position',
+                      contain: 'strict'
+                    }}
                   >
                     <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                       {/* Load more indicator */}
