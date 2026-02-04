@@ -144,7 +144,6 @@ const Messages = () => {
   useEffect(() => {
     if (selectedConversation && profile) {
       // Reset per-conversation scroll/pagination state
-      setMessages([]);
       setHasMoreMessages(true);
       setLoadingMore(false);
       setShowScrollToBottom(false);
@@ -153,6 +152,7 @@ const Messages = () => {
       isAtBottomRef.current = true;
       forceScrollToBottomRef.current = true;
 
+      // Fetch messages immediately without clearing first (reduces perceived lag)
       fetchMessages({ reset: true });
       markMessagesAsRead();
       fetchSharedProject();
@@ -305,12 +305,21 @@ const Messages = () => {
 
     const batch = (data as Message[] | null) ?? [];
     const ordered = batch.slice().reverse();
+    
+    // Update messages immediately
     setMessages(ordered);
     oldestCursorRef.current = ordered[0]?.created_at ?? null;
     setHasMoreMessages(batch.length === PAGE_SIZE);
 
     if (opts?.reset) {
       forceScrollToBottomRef.current = true;
+      // Scroll immediately after setting messages
+      requestAnimationFrame(() => {
+        const el = scrollContainerRef.current;
+        if (el) {
+          el.scrollTo({ top: el.scrollHeight, behavior: 'auto' });
+        }
+      });
     }
   };
 
