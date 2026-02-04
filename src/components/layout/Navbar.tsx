@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Briefcase, User, LogOut, MessageSquare, PlusCircle, LayoutDashboard, CreditCard, ListOrdered, Menu, X } from 'lucide-react';
-
+import { Briefcase, User, LogOut, MessageSquare, PlusCircle, LayoutDashboard, CreditCard, ListOrdered, Menu } from 'lucide-react';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 const Navbar = () => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
@@ -62,6 +62,8 @@ const Navbar = () => {
                   </Button>
                 </Link>
               )}
+              
+              <NotificationBell />
               
               <Link to="/messages">
                 <Button variant="ghost" size="icon">
@@ -121,11 +123,14 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         <div className="flex md:hidden items-center gap-2">
           {user && (
-            <Link to="/messages">
-              <Button variant="ghost" size="icon">
-                <MessageSquare className="h-5 w-5" />
-              </Button>
-            </Link>
+            <>
+              <NotificationBell />
+              <Link to="/messages">
+                <Button variant="ghost" size="icon">
+                  <MessageSquare className="h-5 w-5" />
+                </Button>
+              </Link>
+            </>
           )}
           
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
