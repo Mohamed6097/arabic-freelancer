@@ -221,11 +221,8 @@ const ProjectDetail = () => {
     }
 
     if (status === 'accepted') {
-      // Update project status
-      await supabase
-        .from('projects')
-        .update({ status: 'in_progress' })
-        .eq('id', id);
+      // Keep project status as 'open' to allow more proposals
+      // Don't update project status here - it stays open for more freelancers
 
       // Auto-send message to freelancer
       if (freelancerId && profile) {
@@ -252,7 +249,7 @@ const ProjectDetail = () => {
 
         toast({
           title: 'تم قبول العرض',
-          description: 'تم إرسال رسالة للمستقل لبدء العمل',
+          description: 'تم إرسال رسالة للمستقل لبدء العمل - المشروع لا يزال مفتوحاً لعروض أخرى',
         });
 
         // Navigate to messages with the freelancer
@@ -463,7 +460,7 @@ const ProjectDetail = () => {
                             </span>
                           </div>
                         </div>
-                        {proposal.status === 'pending' && project.status === 'open' && (
+                        {proposal.status === 'pending' && (
                           <div className="flex gap-2 mt-4">
                             <Button
                               size="sm"
