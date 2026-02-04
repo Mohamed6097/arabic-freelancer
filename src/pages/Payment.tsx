@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, CheckCircle, Clock, XCircle, CreditCard, Building2, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
+import paymentQR from '@/assets/payment-qr.jpeg';
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -140,18 +141,30 @@ const Payment = () => {
             </p>
           </div>
 
-          {/* Bank Details */}
-          <Card>
+          {/* Bank Details with QR Code */}
+          <Card className="overflow-hidden">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
                 بيانات الحساب البنكي
               </CardTitle>
               <CardDescription>
-                قم بالتحويل إلى الحساب التالي
+                امسح رمز QR أو قم بالتحويل إلى الحساب التالي
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              {/* QR Code */}
+              <div className="flex justify-center">
+                <div className="bg-[#0f2744] p-6 rounded-2xl">
+                  <img 
+                    src={paymentQR} 
+                    alt="QR Code للدفع" 
+                    className="w-64 h-auto rounded-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Bank Details */}
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>اسم البنك</Label>
@@ -165,17 +178,26 @@ const Payment = () => {
                 <div className="space-y-2">
                   <Label>اسم صاحب الحساب</Label>
                   <div className="flex items-center gap-2">
-                    <Input value="منصة تاسكاتي" readOnly className="bg-muted" />
-                    <Button variant="outline" size="icon" onClick={() => copyToClipboard('منصة تاسكاتي')}>
+                    <Input value="حسن يسين سيد" readOnly className="bg-muted" />
+                    <Button variant="outline" size="icon" onClick={() => copyToClipboard('حسن يسين سيد')}>
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
+                  <Label>رقم الحساب</Label>
+                  <div className="flex items-center gap-2">
+                    <Input value="68201760885001" readOnly className="bg-muted font-mono" />
+                    <Button variant="outline" size="icon" onClick={() => copyToClipboard('68201760885001')}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
                   <Label>رقم الآيبان (IBAN)</Label>
                   <div className="flex items-center gap-2">
-                    <Input value="SA0000000000000000000000" readOnly className="bg-muted font-mono" />
-                    <Button variant="outline" size="icon" onClick={() => copyToClipboard('SA0000000000000000000000')}>
+                    <Input value="SA3505000068201760885001" readOnly className="bg-muted font-mono" />
+                    <Button variant="outline" size="icon" onClick={() => copyToClipboard('SA3505000068201760885001')}>
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
