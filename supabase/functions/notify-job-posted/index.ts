@@ -29,39 +29,79 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { projectId, projectTitle, projectCategory, clientName }: JobNotificationRequest = await req.json();
 
-    console.log("Notifying freelancers about new job:", projectTitle);
+    console.log("Notifying users about new job:", projectTitle);
 
-    // Get all freelancers
-    const { data: freelancers, error: freelancersError } = await supabase
+    // Get all users (both freelancers and clients) to send in-app notifications
+    const { data: allUsers, error: usersError } = await supabase
       .from("profiles")
-      .select("user_id, full_name")
-      .eq("user_type", "freelancer");
+      .select("id, full_name, user_type");
 
-    if (freelancersError) {
-      console.error("Error fetching freelancers:", freelancersError);
-      throw freelancersError;
+    if (usersError) {
+      console.error("Error fetching users:", usersError);
+      throw usersError;
     }
 
-    if (!freelancers || freelancers.length === 0) {
-      console.log("No freelancers found");
-      return new Response(JSON.stringify({ success: true, sent: 0 }), {
+    // Create in-app notifications for all users
+    let notificationCount = 0;
+    if (allUsers && allUsers.length > 0) {
+      const notifications = allUsers.map(user => ({
+        user_id: user.id,
+        type: 'job_posted',
+        title: 'مشروع جديد متاح',
+        message: `تم نشر مشروع جديد: ${projectTitle} في تصنيف ${projectCategory} بواسطة ${clientName}`,
+        link: `/projects/${projectId}`,
+        is_read: false,
+      }));
+
+      const { error: notifyError } = await supabase
+        .from("notifications")
+        .insert(notifications);
+
+      if (notifyError) {
+        console.error("Error creating notifications:", notifyError);
+      } else {
+        notificationCount = notifications.length;
+        console.log(`Created ${notificationCount} in-app notifications`);
+      }
+    }
+
+    // Get all freelancers for email notifications
+    const freelancers = allUsers?.filter(u => u.user_type === 'freelancer') || [];
+
+    if (freelancers.length === 0) {
+      console.log("No freelancers found for email notifications");
+      return new Response(JSON.stringify({ success: true, sent: 0, notifications: notificationCount }), {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    // Get emails for all freelancers
+    // Get emails for all freelancers and send email notifications
     let sentCount = 0;
     for (const freelancer of freelancers) {
       try {
-        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(freelancer.user_id);
+        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(freelancer.id);
 
-        if (authError || !authUser?.user?.email) {
-          console.log(`Skipping user ${freelancer.user_id}: no email found`);
+        // Note: freelancer.id is the profile id, we need user_id
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("id", freelancer.id)
+          .single();
+
+        if (!profileData?.user_id) {
+          console.log(`Skipping freelancer ${freelancer.id}: no user_id found`);
           continue;
         }
 
-        const email = authUser.user.email;
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(profileData.user_id);
+
+        if (userError || !userData?.user?.email) {
+          console.log(`Skipping user ${profileData.user_id}: no email found`);
+          continue;
+        }
+
+        const email = userData.user.email;
 
         await resend.emails.send({
           from: "منصة تاسكاتى <noreply@resend.dev>",
@@ -114,13 +154,13 @@ const handler = async (req: Request): Promise<Response> => {
         sentCount++;
         console.log(`Email sent to ${email}`);
       } catch (emailError) {
-        console.error(`Failed to send email to freelancer ${freelancer.user_id}:`, emailError);
+        console.error(`Failed to send email to freelancer ${freelancer.id}:`, emailError);
       }
     }
 
-    console.log(`Job notification sent to ${sentCount} freelancers`);
+    console.log(`Job notification: ${notificationCount} in-app, ${sentCount} emails sent`);
 
-    return new Response(JSON.stringify({ success: true, sent: sentCount }), {
+    return new Response(JSON.stringify({ success: true, sent: sentCount, notifications: notificationCount }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
