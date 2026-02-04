@@ -814,11 +814,11 @@ const Messages = () => {
     <div className="min-h-screen h-[100dvh] flex flex-col bg-background overflow-hidden" dir="rtl">
       <Navbar />
       
-      <main className="flex-1 container px-0 sm:px-4 py-0 sm:py-4 lg:py-8 overflow-hidden">
-        <div className="grid gap-0 lg:gap-4 lg:grid-cols-3 h-full bg-card sm:rounded-xl overflow-hidden sm:shadow-lg sm:border min-h-0">
+      <main className="flex-1 container px-0 sm:px-4 py-0 sm:py-4 lg:py-8 overflow-hidden min-h-0">
+        <div className="grid gap-0 lg:gap-4 lg:grid-cols-3 h-full bg-card sm:rounded-xl overflow-hidden sm:shadow-lg sm:border">
           {/* Conversations List */}
-          <div className={`lg:col-span-1 border-l flex flex-col h-full ${showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
-            <div className="p-3 sm:p-4 border-b">
+          <div className={`lg:col-span-1 border-l flex flex-col overflow-hidden ${showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
+            <div className="p-3 sm:p-4 border-b shrink-0">
               <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
                 المحادثات
@@ -888,7 +888,7 @@ const Messages = () => {
           </div>
 
           {/* Chat Area */}
-          <Card className={`lg:col-span-2 flex flex-col border-0 rounded-none min-h-0 h-full ${!showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
+          <Card className={`lg:col-span-2 flex flex-col border-0 rounded-none overflow-hidden ${!showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
             {selectedConversation ? (
               <>
                 <ChatHeader
@@ -995,7 +995,7 @@ const Messages = () => {
                     </div>
                   )}
                   
-                  <form onSubmit={handleSendMessage} className="p-2 sm:p-4 border-t flex gap-1 sm:gap-2 bg-card">
+                  <form onSubmit={handleSendMessage} className="p-2 sm:p-4 border-t flex gap-1 sm:gap-2 bg-card shrink-0">
                     <VoiceMessageRecorder 
                       onSend={handleSendVoiceMessage}
                       disabled={sending}
