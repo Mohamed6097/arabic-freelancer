@@ -84,12 +84,8 @@ const AttachmentButton = ({ profileId, senderName, receiverId, onSent, disabled 
       });
 
       if (notifyResult.ok === false) {
+        // Silently log error - don't show toast since message was sent successfully
         console.error('Failed to send email notification:', notifyResult.error);
-        toast({
-          title: 'تعذر إرسال إشعار البريد',
-          description: notifyResult.error,
-          variant: 'destructive',
-        });
       }
 
       onSent();

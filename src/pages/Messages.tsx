@@ -607,12 +607,8 @@ const Messages = () => {
   const sendEmailNotification = async (receiverId: string, senderName: string, messagePreview: string) => {
     const result = await sendMessageEmailNotification({ receiverId, senderName, messagePreview });
     if (result.ok === false) {
+      // Silently log error - don't show toast since message was sent successfully
       console.error('Failed to send email notification:', result.error);
-      toast({
-        title: 'تعذر إرسال إشعار البريد',
-        description: result.error,
-        variant: 'destructive',
-      });
     }
   };
 
