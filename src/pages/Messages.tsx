@@ -71,6 +71,8 @@ const Messages = () => {
   const { user, profile, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const messagesWrapperRef = useRef<HTMLDivElement>(null);
+  const bottomSentinelRef = useRef<HTMLDivElement>(null);
   const isAtBottomRef = useRef(true);
   const forceScrollToBottomRef = useRef(true);
   const oldestCursorRef = useRef<string | null>(null);
@@ -177,23 +179,50 @@ const Messages = () => {
     }
   }, [selectedConversation, profile]);
 
+  const scrollToLatest = useCallback(
+    (behavior: ScrollBehavior) => {
+      const sentinel = bottomSentinelRef.current;
+      const container = scrollContainerRef.current;
+      requestAnimationFrame(() => {
+        if (sentinel) {
+          sentinel.scrollIntoView({ behavior, block: 'end' });
+          return;
+        }
+        if (container) {
+          container.scrollTo({ top: container.scrollHeight, behavior });
+        }
+      });
+    },
+    []
+  );
+
+  // Keep anchored to bottom when content height changes (e.g. images / audio controls render)
+  useEffect(() => {
+    const wrap = messagesWrapperRef.current;
+    if (!wrap || typeof ResizeObserver === 'undefined') return;
+
+    const ro = new ResizeObserver(() => {
+      if (isAtBottomRef.current) {
+        scrollToLatest('auto');
+      }
+    });
+
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, [scrollToLatest]);
+
   useEffect(() => {
     // WhatsApp-like behavior: only auto-scroll if user is already at bottom
     // or when we explicitly force it (e.g., switching conversation / sending message)
-    const el = scrollContainerRef.current;
-    if (!el) return;
-
     if (forceScrollToBottomRef.current || isAtBottomRef.current) {
       const behavior: ScrollBehavior = forceScrollToBottomRef.current
         ? forceScrollBehaviorRef.current
         : 'smooth';
       forceScrollToBottomRef.current = false;
       forceScrollBehaviorRef.current = 'auto';
-      requestAnimationFrame(() => {
-        el.scrollTo({ top: el.scrollHeight, behavior });
-      });
+      scrollToLatest(behavior);
     }
-  }, [messages.length, selectedConversation?.id]);
+  }, [messages.length, selectedConversation?.id, scrollToLatest]);
 
   // Realtime subscription
   useEffect(() => {
@@ -267,11 +296,20 @@ const Messages = () => {
     };
   }, [profile, selectedConversation]);
 
-  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior });
-  };
+  const scrollToBottom = useCallback(
+    (behavior: ScrollBehavior = 'smooth') => {
+      scrollToLatest(behavior);
+    },
+    [scrollToLatest]
+  );
+
+  const jumpToLatest = useCallback(() => {
+    isAtBottomRef.current = true;
+    forceScrollToBottomRef.current = true;
+    forceScrollBehaviorRef.current = 'auto';
+    setShowScrollToBottom(false);
+    scrollToLatest('auto');
+  }, [scrollToLatest]);
 
   const fetchConversations = async () => {
     if (!profile) return;
@@ -348,15 +386,17 @@ const Messages = () => {
     setLoading(false);
   };
 
-  const fetchMessages = async (opts?: { reset?: boolean }) => {
-    if (!profile || !selectedConversation) return;
+  const fetchMessages = useCallback(async (opts?: { reset?: boolean }) => {
+    const profileId = profile?.id;
+    const otherId = selectedConversation?.id;
+    if (!profileId || !otherId) return;
 
     // Load latest messages page (DESC -> reverse to display ASC)
     const { data } = await supabase
       .from('messages')
       .select('*')
       .or(
-        `and(sender_id.eq.${profile.id},receiver_id.eq.${selectedConversation.id}),and(sender_id.eq.${selectedConversation.id},receiver_id.eq.${profile.id})`
+        `and(sender_id.eq.${profileId},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${profileId})`
       )
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE);
@@ -373,7 +413,7 @@ const Messages = () => {
       forceScrollToBottomRef.current = true;
       forceScrollBehaviorRef.current = 'auto';
     }
-  };
+  }, [profile?.id, selectedConversation?.id]);
 
   const loadOlderMessages = useCallback(async () => {
     if (!profile || !selectedConversation) return;
@@ -597,8 +637,17 @@ const Messages = () => {
     setSending(true);
 
     // Optimistic update - add message to UI immediately
+    const messageId =
+      typeof globalThis !== 'undefined' &&
+      'crypto' in globalThis &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (globalThis as any).crypto?.randomUUID
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (globalThis as any).crypto.randomUUID()
+        : `temp-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
     const optimisticMessage: Message = {
-      id: `temp-${Date.now()}`,
+      id: messageId,
       content: messageContent,
       created_at: new Date().toISOString(),
       sender_id: profile.id,
@@ -621,6 +670,7 @@ const Messages = () => {
       const { data: inserted, error: insertError } = await supabase
         .from('messages')
         .insert({
+          id: messageId,
           sender_id: profile.id,
           receiver_id: selectedConversation.id,
           content: messageContent,
@@ -633,8 +683,8 @@ const Messages = () => {
         throw insertError ?? new Error('Insert failed');
       }
 
-      // Replace optimistic message with server version (stable id + timestamp)
-      setMessages((prev) => prev.map((m) => (m.id === optimisticMessage.id ? (inserted as Message) : m)));
+      // Replace optimistic message with server version (canonical timestamp)
+      setMessages((prev) => prev.map((m) => (m.id === messageId ? (inserted as Message) : m)));
 
       // Update conversations preview instantly
       const preview = inserted.message_type === 'voice' ? '🎤 رسالة صوتية' : inserted.content;
@@ -657,7 +707,7 @@ const Messages = () => {
       sendEmailNotification(selectedConversation.id, profile.full_name, messageContent).catch(console.error);
     } catch (err) {
       // Remove optimistic message on error
-      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+      setMessages(prev => prev.filter(m => m.id !== messageId));
       toast({
         title: 'خطأ',
         description: 'تعذر إرسال الرسالة',
@@ -870,10 +920,10 @@ const Messages = () => {
                   <div
                     ref={scrollContainerRef}
                     onScroll={handleMessagesScroll}
-                    className="flex-1 overflow-y-auto overscroll-contain min-h-0 scroll-smooth"
+                    className="flex-1 overflow-y-auto overscroll-contain min-h-0"
                     style={{ WebkitOverflowScrolling: 'touch' }}
                   >
-                    <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                    <div className="min-h-full p-3 sm:p-4 flex flex-col">
                       {/* Load more indicator */}
                       {hasMoreMessages && (
                         <div className="flex justify-center py-3">
@@ -890,34 +940,42 @@ const Messages = () => {
                           )}
                         </div>
                       )}
-                      
-                      {/* Messages */}
-                      {messages.length === 0 && !loading ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                          <MessageSquare className="h-12 w-12 text-muted-foreground mb-3" />
-                          <p className="text-muted-foreground text-sm">لا توجد رسائل بعد</p>
-                          <p className="text-muted-foreground text-xs mt-1">ابدأ المحادثة الآن!</p>
-                        </div>
-                      ) : (
-                        messages.map((msg) => (
-                          <MessageBubble
-                            key={msg.id}
-                            id={msg.id}
-                            content={msg.content}
-                            messageType={msg.message_type as 'text' | 'voice' | 'attachment'}
-                            audioUrl={msg.audio_url}
-                            audioDuration={msg.audio_duration}
-                            attachmentUrl={msg.attachment_url}
-                            attachmentName={msg.attachment_name}
-                            attachmentType={msg.attachment_type}
-                            timestamp={msg.created_at}
-                            isOwn={msg.sender_id === profile?.id}
-                            isRead={msg.is_read}
-                            isDeleted={msg.is_deleted}
-                            onUpdate={fetchMessages}
-                          />
-                        ))
-                      )}
+
+                      <div
+                        ref={messagesWrapperRef}
+                        className="flex-1 flex flex-col justify-end gap-2 sm:gap-3"
+                      >
+                        {/* Messages */}
+                        {messages.length === 0 && !loading ? (
+                          <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
+                            <MessageSquare className="h-12 w-12 text-muted-foreground mb-3" />
+                            <p className="text-muted-foreground text-sm">لا توجد رسائل بعد</p>
+                            <p className="text-muted-foreground text-xs mt-1">ابدأ المحادثة الآن!</p>
+                          </div>
+                        ) : (
+                          messages.map((msg) => (
+                            <MessageBubble
+                              key={msg.id}
+                              id={msg.id}
+                              content={msg.content}
+                              messageType={msg.message_type as 'text' | 'voice' | 'attachment'}
+                              audioUrl={msg.audio_url}
+                              audioDuration={msg.audio_duration}
+                              attachmentUrl={msg.attachment_url}
+                              attachmentName={msg.attachment_name}
+                              attachmentType={msg.attachment_type}
+                              timestamp={msg.created_at}
+                              isOwn={msg.sender_id === profile?.id}
+                              isRead={msg.is_read}
+                              isDeleted={msg.is_deleted}
+                              onUpdate={fetchMessages}
+                            />
+                          ))
+                        )}
+
+                        {/* Scroll anchor */}
+                        <div ref={bottomSentinelRef} className="h-px w-full" aria-hidden />
+                      </div>
                     </div>
                   </div>
 
@@ -929,7 +987,7 @@ const Messages = () => {
                         variant="secondary"
                         size="sm"
                         className="rounded-full shadow-lg border flex items-center gap-1 px-3"
-                        onClick={() => scrollToBottom('smooth')}
+                        onClick={jumpToLatest}
                       >
                         <ChevronDown className="h-4 w-4" />
                         <span className="text-xs">الرسائل الجديدة</span>
