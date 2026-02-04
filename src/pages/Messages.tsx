@@ -527,32 +527,63 @@ const Messages = () => {
       return;
     }
 
+    const messageContent = newMessage.trim();
+    
+    // Clear input immediately for instant feedback
+    setNewMessage('');
     setSending(true);
 
-    // After sending, we want to jump to the latest message like WhatsApp
+    // Optimistic update - add message to UI immediately
+    const optimisticMessage: Message = {
+      id: `temp-${Date.now()}`,
+      content: messageContent,
+      created_at: new Date().toISOString(),
+      sender_id: profile.id,
+      receiver_id: selectedConversation.id,
+      is_read: false,
+      is_deleted: false,
+      message_type: 'text',
+      audio_url: null,
+      audio_duration: null,
+      attachment_url: null,
+      attachment_name: null,
+      attachment_type: null,
+    };
+    
+    setMessages(prev => [...prev, optimisticMessage]);
     forceScrollToBottomRef.current = true;
+    
+    // Scroll immediately
+    requestAnimationFrame(() => {
+      const el = scrollContainerRef.current;
+      if (el) {
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+      }
+    });
 
     const { error: insertError } = await supabase.from('messages').insert({
       sender_id: profile.id,
       receiver_id: selectedConversation.id,
-      content: newMessage.trim(),
+      content: messageContent,
       message_type: 'text',
     });
 
     if (insertError) {
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       toast({
         title: 'خطأ',
         description: 'تعذر إرسال الرسالة',
         variant: 'destructive',
       });
+      setNewMessage(messageContent); // Restore message
       setSending(false);
       return;
     }
 
-    // Send email notification
-    await sendEmailNotification(selectedConversation.id, profile.full_name, newMessage.trim());
+    // Fire and forget email notification (non-blocking)
+    sendEmailNotification(selectedConversation.id, profile.full_name, messageContent).catch(console.error);
 
-    setNewMessage('');
     setSending(false);
   };
 
@@ -754,7 +785,8 @@ const Messages = () => {
                   <div
                     ref={scrollContainerRef}
                     onScroll={handleMessagesScroll}
-                    className="flex-1 overflow-y-auto overscroll-contain min-h-0"
+                    className="flex-1 overflow-y-auto overscroll-contain min-h-0 scroll-smooth will-change-scroll"
+                    style={{ WebkitOverflowScrolling: 'touch' }}
                   >
                     <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                       {/* Load more indicator */}
