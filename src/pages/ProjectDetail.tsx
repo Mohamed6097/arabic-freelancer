@@ -414,13 +414,16 @@ const ProjectDetail = () => {
                     <Card key={proposal.id} className="border">
                       <CardContent className="pt-4">
                         <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-3">
+                          <div 
+                            className="flex items-start gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => navigate(`/profile/${proposal.profiles.id}`)}
+                          >
                             <Avatar>
                               <AvatarImage src={proposal.profiles.avatar_url || ''} />
                               <AvatarFallback>{proposal.profiles.full_name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium">{proposal.profiles.full_name}</p>
+                              <p className="font-medium hover:text-primary transition-colors">{proposal.profiles.full_name}</p>
                               {proposal.profiles.bio && (
                                 <p className="text-sm text-muted-foreground line-clamp-1">{proposal.profiles.bio}</p>
                               )}
