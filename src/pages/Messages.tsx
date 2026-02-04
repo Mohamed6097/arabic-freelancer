@@ -811,84 +811,85 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen h-[100dvh] flex flex-col bg-background overflow-hidden" dir="rtl">
+    <div className="fixed inset-0 flex flex-col bg-background" dir="rtl">
       <Navbar />
       
-      <main className="flex-1 container px-0 sm:px-4 py-0 sm:py-4 lg:py-8 overflow-hidden min-h-0">
-        <div className="grid gap-0 lg:gap-4 lg:grid-cols-3 h-full bg-card sm:rounded-xl overflow-hidden sm:shadow-lg sm:border">
-          {/* Conversations List */}
-          <div className={`lg:col-span-1 border-l flex flex-col overflow-hidden ${showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
-            <div className="p-3 sm:p-4 border-b shrink-0">
-              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                المحادثات
-              </h2>
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="بحث..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10 h-9 sm:h-10 text-sm sm:text-base"
-                />
+      <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex lg:container lg:px-4 lg:py-4 min-h-0 overflow-hidden">
+          <div className="flex-1 flex lg:gap-4 bg-card lg:rounded-xl overflow-hidden lg:shadow-lg lg:border min-h-0">
+            {/* Conversations List */}
+            <div className={`w-full lg:w-80 xl:w-96 lg:border-l flex flex-col min-h-0 ${showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
+              <div className="p-3 sm:p-4 border-b shrink-0 bg-card">
+                <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  المحادثات
+                </h2>
+                <div className="relative">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="بحث..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pr-10 h-9 sm:h-10 text-sm sm:text-base"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
+                {loading ? (
+                  <div className="space-y-4 p-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex items-center gap-3 animate-pulse">
+                        <div className="h-12 w-12 rounded-full bg-muted"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-muted rounded w-1/2"></div>
+                          <div className="h-3 bg-muted rounded w-3/4 mt-2"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : filteredConversations.length === 0 ? (
+                  <div className="text-center py-12 px-4">
+                    <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">لا توجد محادثات بعد</p>
+                  </div>
+                ) : (
+                  filteredConversations.map((conv) => (
+                    <button
+                      key={conv.id}
+                      onClick={() => handleSelectConversation(conv)}
+                      className={`w-full flex items-center gap-2 sm:gap-3 p-3 sm:p-4 hover:bg-muted/50 active:bg-muted transition-colors text-right border-b ${
+                        selectedConversation?.id === conv.id ? 'bg-muted' : ''
+                      }`}
+                    >
+                      <Avatar className="h-11 w-11 sm:h-12 sm:w-12 flex-shrink-0">
+                        <AvatarImage src={conv.avatar_url || ''} />
+                        <AvatarFallback className="text-base">{conv.full_name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-semibold truncate text-sm sm:text-base">{conv.full_name}</p>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground flex-shrink-0">
+                            {format(new Date(conv.lastMessageTime), 'HH:mm', { locale: ar })}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between mt-0.5 sm:mt-1 gap-2">
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
+                          {conv.unreadCount > 0 && (
+                            <span className="bg-primary text-primary-foreground text-[10px] sm:text-xs rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center flex-shrink-0">
+                              {conv.unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                )}
               </div>
             </div>
-            
-            <div className="flex-1 overflow-y-auto overscroll-contain">
-              {loading ? (
-                <div className="space-y-4 p-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-3 animate-pulse">
-                      <div className="h-12 w-12 rounded-full bg-muted"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-muted rounded w-1/2"></div>
-                        <div className="h-3 bg-muted rounded w-3/4 mt-2"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : filteredConversations.length === 0 ? (
-                <div className="text-center py-12 px-4">
-                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">لا توجد محادثات بعد</p>
-                </div>
-              ) : (
-                filteredConversations.map((conv) => (
-                  <button
-                    key={conv.id}
-                    onClick={() => handleSelectConversation(conv)}
-                    className={`w-full flex items-center gap-2 sm:gap-3 p-3 sm:p-4 hover:bg-muted/50 transition-colors text-right border-b ${
-                      selectedConversation?.id === conv.id ? 'bg-muted' : ''
-                    }`}
-                  >
-                    <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
-                      <AvatarImage src={conv.avatar_url || ''} />
-                      <AvatarFallback>{conv.full_name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold truncate text-sm sm:text-base">{conv.full_name}</p>
-                        <span className="text-[10px] sm:text-xs text-muted-foreground flex-shrink-0">
-                          {format(new Date(conv.lastMessageTime), 'HH:mm', { locale: ar })}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between mt-0.5 sm:mt-1 gap-2">
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
-                        {conv.unreadCount > 0 && (
-                          <span className="bg-primary text-primary-foreground text-[10px] sm:text-xs rounded-full h-4 sm:h-5 min-w-[16px] sm:min-w-[20px] px-1 sm:px-1.5 flex items-center justify-center flex-shrink-0">
-                            {conv.unreadCount}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
 
-          {/* Chat Area */}
-          <Card className={`lg:col-span-2 flex flex-col border-0 rounded-none overflow-hidden ${!showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
+            {/* Chat Area */}
+            <Card className={`flex-1 flex flex-col border-0 rounded-none min-h-0 ${!showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
             {selectedConversation ? (
               <>
                 <ChatHeader
@@ -1030,6 +1031,7 @@ const Messages = () => {
               </CardContent>
             )}
           </Card>
+          </div>
         </div>
       </main>
 
