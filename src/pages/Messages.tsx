@@ -75,6 +75,10 @@ const Messages = () => {
   const forceScrollToBottomRef = useRef(true);
   const oldestCursorRef = useRef<string | null>(null);
   const loadingMoreLockRef = useRef(false);
+  const scrollRafRef = useRef<number | null>(null);
+  const lastShowScrollToBottomRef = useRef<boolean>(false);
+  const conversationsRef = useRef<Conversation[]>([]);
+  const forceScrollBehaviorRef = useRef<ScrollBehavior>('auto');
 
   const PAGE_SIZE = 30;
 
@@ -142,6 +146,19 @@ const Messages = () => {
   }, [profile]);
 
   useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollRafRef.current) {
+        cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (selectedConversation && profile) {
       // Reset per-conversation scroll/pagination state
       setHasMoreMessages(true);
@@ -151,6 +168,7 @@ const Messages = () => {
       oldestCursorRef.current = null;
       isAtBottomRef.current = true;
       forceScrollToBottomRef.current = true;
+      forceScrollBehaviorRef.current = 'auto';
 
       // Fetch messages immediately without clearing first (reduces perceived lag)
       fetchMessages({ reset: true });
@@ -166,8 +184,11 @@ const Messages = () => {
     if (!el) return;
 
     if (forceScrollToBottomRef.current || isAtBottomRef.current) {
-      const behavior: ScrollBehavior = forceScrollToBottomRef.current ? 'auto' : 'smooth';
+      const behavior: ScrollBehavior = forceScrollToBottomRef.current
+        ? forceScrollBehaviorRef.current
+        : 'smooth';
       forceScrollToBottomRef.current = false;
+      forceScrollBehaviorRef.current = 'auto';
       requestAnimationFrame(() => {
         el.scrollTo({ top: el.scrollHeight, behavior });
       });
@@ -189,35 +210,54 @@ const Messages = () => {
         },
         (payload) => {
           const newMsg = payload.new as Message;
+          // Always update conversations list cheaply (avoid refetching all messages each insert)
+          const otherId = newMsg.sender_id === profile.id ? newMsg.receiver_id : newMsg.sender_id;
+          const preview =
+            newMsg.message_type === 'voice'
+              ? '🎤 رسالة صوتية'
+              : newMsg.message_type === 'attachment'
+                ? '📎 مرفق'
+                : newMsg.content;
+
+          setConversations((prev) => {
+            const idx = prev.findIndex((c) => c.id === otherId);
+            if (idx === -1) return prev;
+            const existing = prev[idx];
+            const unreadInc = newMsg.receiver_id === profile.id && !newMsg.is_read ? 1 : 0;
+            const updated: Conversation = {
+              ...existing,
+              lastMessage: preview,
+              lastMessageTime: newMsg.created_at,
+              lastMessageType: newMsg.message_type,
+              unreadCount: existing.unreadCount + unreadInc,
+            };
+            const next = prev.slice();
+            next.splice(idx, 1);
+            return [updated, ...next];
+          });
+
+          // If this conversation isn't in the list yet, fall back to a full refresh (non-blocking)
+          if (!conversationsRef.current.some((c) => c.id === otherId)) {
+            fetchConversations();
+          }
+
+          // Only append to the open chat if the message belongs to it
           if (
-            (newMsg.sender_id === profile.id || newMsg.receiver_id === profile.id) &&
             selectedConversation &&
             (newMsg.sender_id === selectedConversation.id || newMsg.receiver_id === selectedConversation.id)
           ) {
-            // Avoid duplicate if optimistic message exists
-            setMessages((prev) => {
-              const exists = prev.some(m => m.id === newMsg.id);
-              // Remove temp optimistic message if real one arrived
-              const filtered = prev.filter(m => !m.id.startsWith('temp-') || m.content !== newMsg.content);
-              if (exists) return prev;
-              return [...filtered, newMsg];
-            });
-            
-            // Auto-scroll to bottom when new message arrives (if already at bottom or it's own message)
+            setMessages((prev) => (prev.some((m) => m.id === newMsg.id) ? prev : [...prev, newMsg]));
+
+            // Auto-scroll if user is at bottom (or it's our own message)
             if (isAtBottomRef.current || newMsg.sender_id === profile.id) {
-              requestAnimationFrame(() => {
-                const el = scrollContainerRef.current;
-                if (el) {
-                  el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-                }
-              });
+              forceScrollToBottomRef.current = true;
+              forceScrollBehaviorRef.current = 'smooth';
             }
-            
+
             if (newMsg.receiver_id === profile.id) {
               markMessagesAsRead();
             }
           }
-          fetchConversations();
         }
       )
       .subscribe();
@@ -331,13 +371,7 @@ const Messages = () => {
 
     if (opts?.reset) {
       forceScrollToBottomRef.current = true;
-      // Scroll immediately after setting messages
-      requestAnimationFrame(() => {
-        const el = scrollContainerRef.current;
-        if (el) {
-          el.scrollTo({ top: el.scrollHeight, behavior: 'auto' });
-        }
-      });
+      forceScrollBehaviorRef.current = 'auto';
     }
   };
 
@@ -393,16 +427,27 @@ const Messages = () => {
     const el = scrollContainerRef.current;
     if (!el) return;
 
-    const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
-    const atBottom = remaining < 80;
-    const atTop = el.scrollTop < 40;
+    // Throttle scroll handler work to animation frames to avoid jank
+    if (scrollRafRef.current) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
 
-    isAtBottomRef.current = atBottom;
-    setShowScrollToBottom(!atBottom);
+      const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+      const atBottom = remaining < 80;
+      const atTop = el.scrollTop < 40;
 
-    if (atTop) {
-      loadOlderMessages();
-    }
+      isAtBottomRef.current = atBottom;
+
+      const nextShow = !atBottom;
+      if (lastShowScrollToBottomRef.current !== nextShow) {
+        lastShowScrollToBottomRef.current = nextShow;
+        setShowScrollToBottom(nextShow);
+      }
+
+      if (atTop) {
+        loadOlderMessages();
+      }
+    });
   }, [loadOlderMessages]);
 
   const markMessagesAsRead = async () => {
@@ -570,23 +615,47 @@ const Messages = () => {
     
     setMessages(prev => [...prev, optimisticMessage]);
     forceScrollToBottomRef.current = true;
-    
-    // Scroll immediately
-    requestAnimationFrame(() => {
-      const el = scrollContainerRef.current;
-      if (el) {
-        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    forceScrollBehaviorRef.current = 'smooth';
+
+    try {
+      const { data: inserted, error: insertError } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: profile.id,
+          receiver_id: selectedConversation.id,
+          content: messageContent,
+          message_type: 'text',
+        })
+        .select('*')
+        .single();
+
+      if (insertError || !inserted) {
+        throw insertError ?? new Error('Insert failed');
       }
-    });
 
-    const { error: insertError } = await supabase.from('messages').insert({
-      sender_id: profile.id,
-      receiver_id: selectedConversation.id,
-      content: messageContent,
-      message_type: 'text',
-    });
+      // Replace optimistic message with server version (stable id + timestamp)
+      setMessages((prev) => prev.map((m) => (m.id === optimisticMessage.id ? (inserted as Message) : m)));
 
-    if (insertError) {
+      // Update conversations preview instantly
+      const preview = inserted.message_type === 'voice' ? '🎤 رسالة صوتية' : inserted.content;
+      setConversations((prev) => {
+        const idx = prev.findIndex((c) => c.id === selectedConversation.id);
+        if (idx === -1) return prev;
+        const existing = prev[idx];
+        const updated: Conversation = {
+          ...existing,
+          lastMessage: preview,
+          lastMessageTime: inserted.created_at,
+          lastMessageType: inserted.message_type,
+        };
+        const next = prev.slice();
+        next.splice(idx, 1);
+        return [updated, ...next];
+      });
+
+      // Fire and forget email notification (non-blocking)
+      sendEmailNotification(selectedConversation.id, profile.full_name, messageContent).catch(console.error);
+    } catch (err) {
       // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       toast({
@@ -598,9 +667,6 @@ const Messages = () => {
       setSending(false);
       return;
     }
-
-    // Fire and forget email notification (non-blocking)
-    sendEmailNotification(selectedConversation.id, profile.full_name, messageContent).catch(console.error);
 
     setSending(false);
   };
@@ -637,7 +703,8 @@ const Messages = () => {
       });
 
        if (!insertError) {
-         await sendEmailNotification(selectedConversation.id, profile.full_name, '🎤 رسالة صوتية');
+         // Fire and forget (avoid UI lag)
+         sendEmailNotification(selectedConversation.id, profile.full_name, '🎤 رسالة صوتية').catch(console.error);
        }
 
     } catch (error) {
@@ -803,13 +870,8 @@ const Messages = () => {
                   <div
                     ref={scrollContainerRef}
                     onScroll={handleMessagesScroll}
-                    className="flex-1 overflow-y-auto overscroll-contain min-h-0"
-                    style={{ 
-                      WebkitOverflowScrolling: 'touch',
-                      scrollBehavior: 'smooth',
-                      willChange: 'scroll-position',
-                      contain: 'strict'
-                    }}
+                    className="flex-1 overflow-y-auto overscroll-contain min-h-0 scroll-smooth"
+                    style={{ WebkitOverflowScrolling: 'touch' }}
                   >
                     <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                       {/* Load more indicator */}
