@@ -13,7 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
 import Messages from "./pages/Messages";
-import Payment from "./pages/Payment";
+
 import Catalog from "./pages/Catalog";
 import NotFound from "./pages/NotFound";
 
@@ -36,7 +36,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:id" element={<PublicProfile />} />
             <Route path="/messages" element={<Messages />} />
-            <Route path="/payment" element={<Payment />} />
+            
             <Route path="/catalog" element={<Catalog />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
