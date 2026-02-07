@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/layout/Navbar';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Upload, X, FileText, Image } from 'lucide-react';
 
 const categories = [
   'تطوير الويب',
@@ -35,6 +35,35 @@ const NewProject = () => {
   const [budgetMin, setBudgetMin] = useState('');
   const [budgetMax, setBudgetMax] = useState('');
   const [deadline, setDeadline] = useState('');
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Limit file size to 10MB
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: 'خطأ',
+          description: 'حجم الملف يجب أن يكون أقل من 10 ميجابايت',
+          variant: 'destructive',
+        });
+        return;
+      }
+      setAttachmentFile(file);
+    }
+  };
+
+  const removeAttachment = () => {
+    setAttachmentFile(null);
+  };
+
+  const getFileIcon = (file: File) => {
+    if (file.type.startsWith('image/')) {
+      return <Image className="h-4 w-4" />;
+    }
+    return <FileText className="h-4 w-4" />;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +84,39 @@ const NewProject = () => {
 
     setLoading(true);
 
+    let attachmentUrl: string | null = null;
+    let attachmentName: string | null = null;
+
+    // Upload attachment if exists
+    if (attachmentFile) {
+      setUploadingAttachment(true);
+      const fileExt = attachmentFile.name.split('.').pop();
+      const fileName = `${profile.id}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('message-attachments')
+        .upload(fileName, attachmentFile);
+
+      if (uploadError) {
+        setLoading(false);
+        setUploadingAttachment(false);
+        toast({
+          title: 'خطأ',
+          description: 'حدث خطأ أثناء رفع المرفق',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('message-attachments')
+        .getPublicUrl(fileName);
+
+      attachmentUrl = urlData.publicUrl;
+      attachmentName = attachmentFile.name;
+      setUploadingAttachment(false);
+    }
+
     const { data, error } = await supabase
       .from('projects')
       .insert({
@@ -65,6 +127,8 @@ const NewProject = () => {
         budget_min: budgetMin ? parseFloat(budgetMin) : null,
         budget_max: budgetMax ? parseFloat(budgetMax) : null,
         deadline: deadline || null,
+        attachment_url: attachmentUrl,
+        attachment_name: attachmentName,
       })
       .select()
       .single();
@@ -186,8 +250,51 @@ const NewProject = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'جاري الإنشاء...' : 'نشر المشروع'}
+              {/* Attachment Upload */}
+              <div className="space-y-2">
+                <Label>مرفقات (صور أو ملفات)</Label>
+                {!attachmentFile ? (
+                  <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                    <Input
+                      id="attachment"
+                      type="file"
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <label htmlFor="attachment" className="cursor-pointer">
+                      <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        اضغط لرفع ملف أو صورة
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        الحد الأقصى: 10 ميجابايت
+                      </p>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2">
+                      {getFileIcon(attachmentFile)}
+                      <span className="text-sm truncate max-w-[200px]">{attachmentFile.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        ({(attachmentFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={removeAttachment}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading || uploadingAttachment}>
+                {loading || uploadingAttachment ? 'جاري الإنشاء...' : 'نشر المشروع'}
               </Button>
             </form>
           </CardContent>

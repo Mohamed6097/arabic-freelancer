@@ -8,10 +8,11 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, CheckCircle, Clock, XCircle, CreditCard, Building2, Copy } from 'lucide-react';
+import { Upload, CheckCircle, Clock, XCircle, CreditCard, Building2, Copy, Smartphone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import paymentQR from '@/assets/payment-qr.jpeg';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -141,70 +142,130 @@ const Payment = () => {
             </p>
           </div>
 
-          {/* Bank Details with QR Code */}
-          <Card className="overflow-hidden">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                بيانات الحساب البنكي
-              </CardTitle>
-              <CardDescription>
-                امسح رمز QR أو قم بالتحويل إلى الحساب التالي
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* QR Code */}
-              <div className="flex justify-center">
-                <div className="bg-[#0f2744] p-6 rounded-2xl">
-                  <img 
-                    src={paymentQR} 
-                    alt="QR Code للدفع" 
-                    className="w-64 h-auto rounded-lg"
-                  />
-                </div>
-              </div>
+          {/* Payment Methods Tabs */}
+          <Tabs defaultValue="bank" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="bank" className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                تحويل بنكي
+              </TabsTrigger>
+              <TabsTrigger value="vodafone" className="flex items-center gap-2">
+                <Smartphone className="h-4 w-4" />
+                فودافون كاش (مصر)
+              </TabsTrigger>
+            </TabsList>
 
-              {/* Bank Details */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>اسم البنك</Label>
-                  <div className="flex items-center gap-2">
-                    <Input value="بنك الإنماء" readOnly className="bg-muted" />
-                    <Button variant="outline" size="icon" onClick={() => copyToClipboard('بنك الإنماء')}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
+            {/* Bank Transfer Tab */}
+            <TabsContent value="bank">
+              <Card className="overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    بيانات الحساب البنكي
+                  </CardTitle>
+                  <CardDescription>
+                    امسح رمز QR أو قم بالتحويل إلى الحساب التالي
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* QR Code */}
+                  <div className="flex justify-center">
+                    <div className="bg-[#0f2744] p-6 rounded-2xl">
+                      <img 
+                        src={paymentQR} 
+                        alt="QR Code للدفع" 
+                        className="w-64 h-auto rounded-lg"
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>اسم صاحب الحساب</Label>
-                  <div className="flex items-center gap-2">
-                    <Input value="حسن يسين سيد" readOnly className="bg-muted" />
-                    <Button variant="outline" size="icon" onClick={() => copyToClipboard('حسن يسين سيد')}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
+
+                  {/* Bank Details */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>اسم البنك</Label>
+                      <div className="flex items-center gap-2">
+                        <Input value="بنك الإنماء" readOnly className="bg-muted" />
+                        <Button variant="outline" size="icon" onClick={() => copyToClipboard('بنك الإنماء')}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>اسم صاحب الحساب</Label>
+                      <div className="flex items-center gap-2">
+                        <Input value="حسن يسين سيد" readOnly className="bg-muted" />
+                        <Button variant="outline" size="icon" onClick={() => copyToClipboard('حسن يسين سيد')}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>رقم الحساب</Label>
+                      <div className="flex items-center gap-2">
+                        <Input value="68201760885001" readOnly className="bg-muted font-mono" />
+                        <Button variant="outline" size="icon" onClick={() => copyToClipboard('68201760885001')}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>رقم الآيبان (IBAN)</Label>
+                      <div className="flex items-center gap-2">
+                        <Input value="SA3505000068201760885001" readOnly className="bg-muted font-mono" />
+                        <Button variant="outline" size="icon" onClick={() => copyToClipboard('SA3505000068201760885001')}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>رقم الحساب</Label>
-                  <div className="flex items-center gap-2">
-                    <Input value="68201760885001" readOnly className="bg-muted font-mono" />
-                    <Button variant="outline" size="icon" onClick={() => copyToClipboard('68201760885001')}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Vodafone Cash Tab */}
+            <TabsContent value="vodafone">
+              <Card className="overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Smartphone className="h-5 w-5" />
+                    فودافون كاش - مصر
+                  </CardTitle>
+                  <CardDescription>
+                    للعملاء المصريين - قم بالتحويل عبر فودافون كاش
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Vodafone Cash Logo/Icon */}
+                  <div className="flex justify-center">
+                    <div className="bg-gradient-to-br from-red-500 to-red-600 p-8 rounded-2xl text-white text-center">
+                      <Smartphone className="h-16 w-16 mx-auto mb-3" />
+                      <p className="text-xl font-bold">Vodafone Cash</p>
+                      <p className="text-sm opacity-90">فودافون كاش</p>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>رقم الآيبان (IBAN)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input value="SA3505000068201760885001" readOnly className="bg-muted font-mono" />
-                    <Button variant="outline" size="icon" onClick={() => copyToClipboard('SA3505000068201760885001')}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
+
+                  {/* Vodafone Cash Details */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>رقم فودافون كاش</Label>
+                      <div className="flex items-center gap-2">
+                        <Input value="01020801921" readOnly className="bg-muted font-mono text-lg text-center" dir="ltr" />
+                        <Button variant="outline" size="icon" onClick={() => copyToClipboard('01020801921')}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg p-4">
+                      <p className="text-sm text-amber-800 dark:text-amber-200">
+                        <strong>ملاحظة:</strong> بعد إتمام التحويل عبر فودافون كاش، يرجى رفع صورة إيصال التحويل أدناه للتحقق.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
 
           {/* Upload Receipt */}
           <Card>
