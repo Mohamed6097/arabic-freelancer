@@ -245,6 +245,8 @@ export type Database = {
       }
       projects: {
         Row: {
+          attachment_name: string | null
+          attachment_url: string | null
           budget_max: number | null
           budget_min: number | null
           category: string
@@ -260,6 +262,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attachment_name?: string | null
+          attachment_url?: string | null
           budget_max?: number | null
           budget_min?: number | null
           category: string
@@ -275,6 +279,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attachment_name?: string | null
+          attachment_url?: string | null
           budget_max?: number | null
           budget_min?: number | null
           category?: string
