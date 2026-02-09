@@ -176,12 +176,15 @@ const ProjectDetail = () => {
 
     setSubmitting(true);
 
+    const budget = parseFloat(proposedBudget);
+    const days = parseInt(estimatedDays);
+
     const { error } = await supabase.from('proposals').insert({
       project_id: id,
       freelancer_id: profile.id,
       cover_letter: coverLetter.trim(),
-      proposed_budget: parseFloat(proposedBudget),
-      estimated_days: parseInt(estimatedDays),
+      proposed_budget: budget,
+      estimated_days: days,
     });
 
     setSubmitting(false);
@@ -194,6 +197,20 @@ const ProjectDetail = () => {
       });
       return;
     }
+
+    // Notify client via email
+    supabase.functions.invoke('notify-proposal-received', {
+      body: {
+        clientId: project.client_id,
+        freelancerName: profile.full_name,
+        projectTitle: project.title,
+        projectId: id,
+        proposedBudget: budget,
+        estimatedDays: days,
+      },
+    }).then(({ error: notifyErr }) => {
+      if (notifyErr) console.error('Failed to notify client:', notifyErr);
+    });
 
     toast({
       title: 'تم تقديم العرض',
