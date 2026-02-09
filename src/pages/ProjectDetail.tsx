@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/layout/Navbar';
-import { Calendar, DollarSign, Clock, User, Send, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react';
+import { Calendar, DollarSign, Clock, User, Send, CheckCircle, XCircle, Edit, Trash2, FileText, Image, Download } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +38,8 @@ interface Project {
   status: string;
   created_at: string;
   client_id: string;
+  attachment_url: string | null;
+  attachment_name: string | null;
   profiles: {
     id: string;
     full_name: string;
@@ -415,6 +417,34 @@ const ProjectDetail = () => {
                   <h3 className="text-lg font-semibold mb-2">وصف المشروع</h3>
                   <p className="whitespace-pre-wrap text-muted-foreground">{project.description}</p>
                 </div>
+
+                {/* Attachment Display */}
+                {project.attachment_url && (
+                  <div className="border rounded-lg p-4 space-y-2">
+                    <h3 className="text-lg font-semibold">المرفقات</h3>
+                    <a
+                      href={project.attachment_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                    >
+                      {project.attachment_name?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) ? (
+                        <Image className="h-5 w-5 text-primary" />
+                      ) : (
+                        <FileText className="h-5 w-5 text-primary" />
+                      )}
+                      <span className="text-sm flex-1 truncate">{project.attachment_name || 'مرفق'}</span>
+                      <Download className="h-4 w-4 text-muted-foreground" />
+                    </a>
+                    {project.attachment_name?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) && (
+                      <img
+                        src={project.attachment_url}
+                        alt={project.attachment_name}
+                        className="rounded-lg max-h-64 object-contain w-full"
+                      />
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
