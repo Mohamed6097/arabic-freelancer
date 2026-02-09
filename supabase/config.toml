@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.welcome-new-user]
 verify_jwt = false
+
+[functions.notify-proposal-received]
+verify_jwt = false
