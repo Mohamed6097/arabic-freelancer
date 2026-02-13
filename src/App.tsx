@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import NewProject from "./pages/NewProject";
+import EditProject from "./pages/EditProject";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/new" element={<NewProject />} />
             <Route path="/projects/:id" element={<ProjectDetail />} />
+            <Route path="/projects/:id/edit" element={<EditProject />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:id" element={<PublicProfile />} />
