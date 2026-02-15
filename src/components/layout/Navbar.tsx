@@ -43,7 +43,7 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" dir="rtl">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-14 sm:h-16 items-center justify-between gap-2">
         <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary">
           <Briefcase className="h-6 w-6" />
           <span className="hidden sm:inline">منصة تاسكاتى</span>
