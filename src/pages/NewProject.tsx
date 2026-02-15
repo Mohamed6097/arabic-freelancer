@@ -167,7 +167,7 @@ const NewProject = () => {
     <div className="min-h-screen bg-background" dir="rtl">
       <Navbar />
       
-      <main className="container py-8 max-w-2xl">
+      <main className="container py-4 sm:py-8 max-w-2xl">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

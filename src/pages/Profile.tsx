@@ -155,7 +155,7 @@ const Profile = () => {
     <div className="min-h-screen bg-background" dir="rtl">
       <Navbar />
       
-      <main className="container py-8 max-w-2xl space-y-6">
+      <main className="container py-4 sm:py-8 max-w-2xl space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
