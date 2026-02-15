@@ -36,10 +36,10 @@ const Index = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background py-20 lg:py-32">
+      <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background py-12 sm:py-20 lg:py-32">
         <div className="container relative z-10">
           <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
               منصة <span className="text-primary">العمل الحر</span> العربية
             </h1>
             <p className="mt-6 text-lg text-muted-foreground">
@@ -89,9 +89,9 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20">
+      <section className="py-12 sm:py-20">
         <div className="container">
-          <h2 className="text-3xl font-bold text-center mb-12">لماذا تختارنا؟</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">لماذا تختارنا؟</h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((feature) => (
               <Card key={feature.title} className="text-center border-2 hover:border-primary/50 transition-colors">
@@ -111,9 +111,9 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-primary text-primary-foreground">
+      <section className="py-12 sm:py-20 bg-primary text-primary-foreground">
         <div className="container text-center">
-          <h2 className="text-3xl font-bold mb-4">جاهز للانطلاق؟</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4">جاهز للانطلاق؟</h2>
           <p className="text-lg mb-8 opacity-90">
             انضم إلى آلاف المستخدمين وابدأ رحلتك في العمل الحر اليوم
           </p>

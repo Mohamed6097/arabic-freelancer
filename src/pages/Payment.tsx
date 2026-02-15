@@ -133,10 +133,10 @@ const Payment = () => {
   return (
     <div className="min-h-screen bg-background" dir="rtl">
       <Navbar />
-      <div className="container py-8">
+      <div className="container py-4 sm:py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div>
-            <h1 className="text-3xl font-bold">الدفع والتحويل</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">الدفع والتحويل</h1>
             <p className="text-muted-foreground mt-2">
               قم بتحويل المبلغ إلى حسابنا البنكي ثم ارفع إيصال التحويل
             </p>

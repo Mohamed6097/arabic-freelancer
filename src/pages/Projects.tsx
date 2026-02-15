@@ -84,10 +84,10 @@ const Projects = () => {
     <div className="min-h-screen bg-background" dir="rtl">
       <Navbar />
       
-      <main className="container py-8">
+      <main className="container py-4 sm:py-8">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold">تصفح المشاريع</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">تصفح المشاريع</h1>
             <p className="text-muted-foreground">اعثر على المشروع المناسب لمهاراتك وتقدم بعرضك</p>
           </div>
 

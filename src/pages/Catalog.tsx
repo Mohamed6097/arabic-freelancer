@@ -107,7 +107,7 @@ const Catalog = () => {
     <div className="min-h-screen bg-background" dir="rtl">
       <Navbar />
       
-      <main className="container py-8">
+      <main className="container py-4 sm:py-8">
         <div className="mb-8">
           <Button 
             variant="ghost" 
@@ -118,8 +118,8 @@ const Catalog = () => {
             رجوع
           </Button>
           
-          <div className="flex items-center gap-4 mb-2">
-            <h1 className="text-3xl font-bold">قائمة الأسعار</h1>
+          <div className="flex items-center gap-4 mb-2 flex-wrap">
+            <h1 className="text-2xl sm:text-3xl font-bold">قائمة الأسعار</h1>
             <Badge variant={isClient ? 'default' : 'secondary'} className="text-sm">
               {isClient ? 'عميل' : 'مستقل'}
             </Badge>
