@@ -811,8 +811,8 @@ const Messages = () => {
       <Navbar />
       
       <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="flex-1 flex lg:container lg:px-4 lg:py-4 min-h-0 overflow-hidden">
-          <div className="flex-1 flex lg:gap-4 bg-card lg:rounded-xl overflow-hidden lg:shadow-lg lg:border min-h-0">
+        <div className="flex-1 flex lg:container lg:px-4 lg:py-4 min-h-0 overflow-hidden w-full max-w-full">
+          <div className="flex-1 flex lg:gap-4 bg-card lg:rounded-xl overflow-hidden lg:shadow-lg lg:border min-h-0 w-full max-w-full">
             {/* Conversations List */}
             <div className={`w-full lg:w-80 xl:w-96 lg:border-l flex flex-col min-h-0 ${showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
               <div className="p-3 sm:p-4 border-b shrink-0 bg-card">
@@ -885,7 +885,7 @@ const Messages = () => {
             </div>
 
             {/* Chat Area */}
-            <Card className={`flex-1 flex flex-col border-0 rounded-none min-h-0 ${!showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
+            <Card className={`flex-1 flex flex-col border-0 rounded-none min-h-0 w-full max-w-full overflow-hidden ${!showMobileChat ? 'hidden lg:flex' : 'flex'}`}>
             {selectedConversation ? (
               <>
                 <ChatHeader
@@ -913,14 +913,14 @@ const Messages = () => {
                   isProjectCompleted={sharedProject?.status === 'completed'}
                 />
                 
-                <CardContent className="relative flex-1 flex flex-col p-0 overflow-hidden min-h-0">
+                <CardContent className="relative flex-1 flex flex-col p-0 overflow-hidden min-h-0 w-full max-w-full">
                   <div
                     ref={scrollContainerRef}
                     onScroll={handleMessagesScroll}
-                    className="flex-1 overflow-y-auto overscroll-contain min-h-0"
+                    className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain min-h-0"
                     style={{ WebkitOverflowScrolling: 'touch' }}
                   >
-                    <div className="min-h-full p-3 sm:p-4 flex flex-col">
+                    <div className="min-h-full p-2 sm:p-4 flex flex-col">
                       {/* Load more indicator */}
                       {hasMoreMessages && (
                         <div className="flex justify-center py-3">
@@ -992,7 +992,7 @@ const Messages = () => {
                     </div>
                   )}
                   
-                  <form onSubmit={handleSendMessage} className="p-2 sm:p-4 border-t flex gap-1 sm:gap-2 bg-card shrink-0">
+                  <form onSubmit={handleSendMessage} className="p-2 sm:p-3 border-t flex items-center gap-1.5 sm:gap-2 bg-card shrink-0 w-full max-w-full">
                     <VoiceMessageRecorder 
                       onSend={handleSendVoiceMessage}
                       disabled={sending}
@@ -1009,9 +1009,9 @@ const Messages = () => {
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       disabled={sending}
-                      className="flex-1 h-9 sm:h-10 text-sm sm:text-base"
+                      className="flex-1 min-w-0 h-9 sm:h-10 text-sm sm:text-base"
                     />
-                    <Button type="submit" size="icon" className="h-9 w-9 sm:h-10 sm:w-10" disabled={sending || !newMessage.trim()}>
+                    <Button type="submit" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 shrink-0" disabled={sending || !newMessage.trim()}>
                       <Send className="h-4 w-4" />
                     </Button>
                   </form>
