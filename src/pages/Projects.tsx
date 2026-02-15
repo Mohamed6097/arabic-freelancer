@@ -141,21 +141,21 @@ const Projects = () => {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredProjects.map((project) => (
                 <Link key={project.id} to={`/projects/${project.id}`}>
-                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary/50">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <CardTitle className="text-lg line-clamp-1">{project.title}</CardTitle>
-                        <Badge variant="secondary">{project.category}</Badge>
+                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary/50 overflow-hidden">
+                    <CardHeader className="p-4 sm:p-6">
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-base sm:text-lg line-clamp-1 min-w-0">{project.title}</CardTitle>
+                        <Badge variant="secondary" className="shrink-0 text-xs">{project.category}</Badge>
                       </div>
                       <CardDescription className="flex items-center gap-2">
-                        <span>{project.profiles.full_name}</span>
+                        <span className="truncate">{project.profiles.full_name}</span>
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
                       <p className="text-sm text-muted-foreground line-clamp-3">
                         {project.description}
                       </p>
-                      <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center justify-between text-xs sm:text-sm gap-2 flex-wrap">
                         {project.budget_min && project.budget_max && (
                           <div className="flex items-center gap-1 text-primary">
                             <DollarSign className="h-4 w-4" />
