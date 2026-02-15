@@ -141,21 +141,21 @@ const Projects = () => {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredProjects.map((project) => (
                 <Link key={project.id} to={`/projects/${project.id}`}>
-                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary/50 overflow-hidden">
-                    <CardHeader className="p-4 sm:p-6">
-                      <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="text-base sm:text-lg line-clamp-1 min-w-0">{project.title}</CardTitle>
-                        <Badge variant="secondary" className="shrink-0 text-xs">{project.category}</Badge>
+                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary/50">
+                    <CardHeader className="p-3 sm:p-6">
+                      <div className="flex flex-col gap-1">
+                        <Badge variant="secondary" className="text-xs w-fit">{project.category}</Badge>
+                        <CardTitle className="text-sm sm:text-lg line-clamp-2">{project.title}</CardTitle>
                       </div>
-                      <CardDescription className="flex items-center gap-2">
-                        <span className="truncate">{project.profiles.full_name}</span>
+                      <CardDescription>
+                        <span className="truncate block text-xs sm:text-sm">{project.profiles.full_name}</span>
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
-                      <p className="text-sm text-muted-foreground line-clamp-3">
+                    <CardContent className="space-y-3 p-3 pt-0 sm:p-6 sm:pt-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                         {project.description}
                       </p>
-                      <div className="flex items-center justify-between text-xs sm:text-sm gap-2 flex-wrap">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-1 sm:gap-2">
                         {project.budget_min && project.budget_max && (
                           <div className="flex items-center gap-1 text-primary">
                             <DollarSign className="h-4 w-4" />
