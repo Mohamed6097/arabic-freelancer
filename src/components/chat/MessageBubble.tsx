@@ -105,7 +105,7 @@ const MessageBubble = ({
         <div className="flex items-start gap-1">
           <div
             className={cn(
-              "max-w-[75%] rounded-2xl px-4 py-2 shadow-sm",
+              "max-w-[85%] sm:max-w-[75%] rounded-2xl px-3 py-2 sm:px-4 shadow-sm",
               isOwn
                 ? "bg-muted text-muted-foreground rounded-tl-sm"
                 : "bg-muted text-muted-foreground rounded-tr-sm"
@@ -139,7 +139,7 @@ const MessageBubble = ({
         )}
         <div
           className={cn(
-            "max-w-[75%] rounded-2xl px-4 py-2 shadow-sm",
+            "max-w-[85%] sm:max-w-[75%] rounded-2xl px-3 py-2 sm:px-4 shadow-sm",
             isOwn
               ? "bg-primary text-primary-foreground rounded-tl-sm"
               : "bg-muted rounded-tr-sm"
