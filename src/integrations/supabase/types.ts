@@ -205,6 +205,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          completed_projects_count: number
           created_at: string
           full_name: string
           hourly_rate: number | null
@@ -218,6 +219,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          completed_projects_count?: number
           created_at?: string
           full_name: string
           hourly_rate?: number | null
@@ -231,6 +233,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          completed_projects_count?: number
           created_at?: string
           full_name?: string
           hourly_rate?: number | null
@@ -352,6 +355,58 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          project_id: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          project_id: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string
+          rating?: number
+          reviewee_id?: string
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reviewee_id_fkey"
+            columns: ["reviewee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
