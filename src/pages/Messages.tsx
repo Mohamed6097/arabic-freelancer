@@ -513,55 +513,54 @@ const Messages = () => {
     if (!profile || !selectedConversation) return;
 
     // Find projects where the current user is client and other is freelancer (accepted proposal)
-    // OR current user is freelancer and other is client
-    const { data: projectAsClient } = await supabase
+    const { data: clientProjects } = await supabase
       .from('projects')
       .select('id, status, client_id, client_confirmed_complete, freelancer_confirmed_complete')
       .eq('client_id', profile.id)
-      .eq('status', 'in_progress')
-      .limit(1);
+      .eq('status', 'in_progress');
 
-    if (projectAsClient && projectAsClient.length > 0) {
-      // Check if there's an accepted proposal from the selected conversation user
-      const { data: proposal } = await supabase
+    if (clientProjects && clientProjects.length > 0) {
+      const projectIds = clientProjects.map(p => p.id);
+      const { data: proposals } = await supabase
         .from('proposals')
-        .select('id, freelancer_id')
-        .eq('project_id', projectAsClient[0].id)
+        .select('id, freelancer_id, project_id')
+        .in('project_id', projectIds)
         .eq('freelancer_id', selectedConversation.id)
         .eq('status', 'accepted')
-        .single();
+        .limit(1);
 
-      if (proposal) {
+      if (proposals && proposals.length > 0) {
+        const matchedProject = clientProjects.find(p => p.id === proposals[0].project_id)!;
         setSharedProject({
-          ...projectAsClient[0],
-          freelancer_id: proposal.freelancer_id,
+          ...matchedProject,
+          freelancer_id: proposals[0].freelancer_id,
         });
         return;
       }
     }
 
     // Check if current user is freelancer on a project owned by the conversation partner
-    const { data: projectAsFreelancer } = await supabase
+    const { data: freelancerProjects } = await supabase
       .from('projects')
       .select('id, status, client_id, client_confirmed_complete, freelancer_confirmed_complete')
       .eq('client_id', selectedConversation.id)
-      .eq('status', 'in_progress')
-      .limit(1);
+      .eq('status', 'in_progress');
 
-    if (projectAsFreelancer && projectAsFreelancer.length > 0) {
-      // Check if current user has an accepted proposal
-      const { data: proposal } = await supabase
+    if (freelancerProjects && freelancerProjects.length > 0) {
+      const projectIds = freelancerProjects.map(p => p.id);
+      const { data: proposals } = await supabase
         .from('proposals')
-        .select('id, freelancer_id')
-        .eq('project_id', projectAsFreelancer[0].id)
+        .select('id, freelancer_id, project_id')
+        .in('project_id', projectIds)
         .eq('freelancer_id', profile.id)
         .eq('status', 'accepted')
-        .single();
+        .limit(1);
 
-      if (proposal) {
+      if (proposals && proposals.length > 0) {
+        const matchedProject = freelancerProjects.find(p => p.id === proposals[0].project_id)!;
         setSharedProject({
-          ...projectAsFreelancer[0],
-          freelancer_id: proposal.freelancer_id,
+          ...matchedProject,
+          freelancer_id: proposals[0].freelancer_id,
         });
         return;
       }
