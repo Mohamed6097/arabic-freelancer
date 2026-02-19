@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Phone, Video, ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
+import { Phone, Video, ArrowRight, CheckCircle2, Loader2, Shield } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,11 +87,11 @@ const ChatHeader = ({
                   size="icon"
                   disabled
                   className={cn(
-                    "h-8 w-8 sm:h-10 sm:w-10 text-green-600",
+                    "h-8 w-8 sm:h-10 sm:w-10 text-green-600 bg-green-50 dark:bg-green-950/30",
                     otherPartyConfirmed && "animate-pulse"
                   )}
                 >
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 fill-green-100" />
+                  <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
                 </Button>
               ) : (
                 <AlertDialog>
@@ -100,14 +100,14 @@ const ChatHeader = ({
                       variant="ghost" 
                       size="icon"
                       className={cn(
-                        "h-8 w-8 sm:h-10 sm:w-10",
-                        otherPartyConfirmed && "text-green-600 animate-pulse"
+                        "h-8 w-8 sm:h-10 sm:w-10 border-2 border-dashed border-green-400 rounded-full",
+                        otherPartyConfirmed && "text-green-600 animate-pulse bg-green-50 dark:bg-green-950/30 border-solid"
                       )}
                     >
                       {confirming ? (
-                        <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                        <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
                       ) : (
-                        <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
                       )}
                     </Button>
                   </AlertDialogTrigger>
@@ -150,8 +150,8 @@ const ChatHeader = ({
         {isProjectCompleted && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                <CheckCircle className="h-4 w-4" />
+              <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
+                <Shield className="h-4 w-4" />
                 مكتمل
               </div>
             </TooltipTrigger>

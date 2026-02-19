@@ -16,6 +16,8 @@ import CallScreen from '@/components/chat/CallScreen';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useToast } from '@/hooks/use-toast';
 import { containsPhoneNumber, getPhoneBlockMessage } from '@/lib/phoneValidator';
+import ReviewDialog from '@/components/chat/ReviewDialog';
+import CompletionCelebration from '@/components/chat/CompletionCelebration';
 import { Send, MessageSquare, Search, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -97,6 +99,10 @@ const Messages = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [sharedProject, setSharedProject] = useState<SharedProject | null>(null);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [completedProjectTitle, setCompletedProjectTitle] = useState('');
+  const [completedProjectsCount, setCompletedProjectsCount] = useState(0);
   
   // Call states
   const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null);
@@ -584,17 +590,50 @@ const Messages = () => {
       return;
     }
 
-    // Refetch project to get updated status
-    await fetchSharedProject();
-
     const bothConfirmed = isClient 
       ? sharedProject.freelancer_confirmed_complete 
       : sharedProject.client_confirmed_complete;
 
-    if (bothConfirmed) {
+    if (bothConfirmed && selectedConversation) {
+      // Fetch project title for celebration
+      const { data: projectData } = await supabase
+        .from('projects')
+        .select('title')
+        .eq('id', sharedProject.id)
+        .single();
+
+      // Count completed projects for this user
+      const { count } = await supabase
+        .from('projects')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'completed');
+
+      const completedCount = (count || 0);
+      setCompletedProjectsCount(completedCount);
+      setCompletedProjectTitle(projectData?.title || 'مشروع');
+
+      // Send congratulation system message in chat
+      const congratsMessage = `🎉 تهانينا! تم إتمام المشروع "${projectData?.title || ''}" بنجاح. هذا هو المشروع ${getOrdinalLabel(completedCount)} على المنصة!`;
+      
+      await supabase.from('messages').insert({
+        sender_id: profile.id,
+        receiver_id: selectedConversation.id,
+        content: congratsMessage,
+        message_type: 'text',
+      });
+
+      // Update completed_projects_count on profile
+      await supabase
+        .from('profiles')
+        .update({ completed_projects_count: completedCount })
+        .eq('id', profile.id);
+
+      // Show celebration modal
+      setShowCelebration(true);
+
       toast({
         title: 'تم إتمام المشروع! 🎉',
-        description: 'تهانينا! تم إتمام المشروع بنجاح وسيظهر في المشاريع المكتملة.',
+        description: 'تهانينا! تم إتمام المشروع بنجاح.',
       });
     } else {
       toast({
@@ -602,6 +641,44 @@ const Messages = () => {
         description: 'في انتظار تأكيد الطرف الآخر',
       });
     }
+
+    // Refetch project to get updated status
+    await fetchSharedProject();
+  };
+
+  const getOrdinalLabel = (n: number): string => {
+    if (n === 1) return 'الأول';
+    if (n === 2) return 'الثاني';
+    if (n === 3) return 'الثالث';
+    if (n === 4) return 'الرابع';
+    if (n === 5) return 'الخامس';
+    return `رقم ${n}`;
+  };
+
+  const handleSubmitReview = async (rating: number, comment: string) => {
+    if (!profile || !selectedConversation || !sharedProject) return;
+
+    const { error } = await supabase.from('reviews').insert({
+      project_id: sharedProject.id,
+      reviewer_id: profile.id,
+      reviewee_id: selectedConversation.id,
+      rating,
+      comment: comment || null,
+    });
+
+    if (error) {
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء إرسال التقييم',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'شكراً لتقييمك! ⭐',
+      description: 'تم إرسال تقييمك بنجاح',
+    });
   };
 
   const sendEmailNotification = async (receiverId: string, senderName: string, messagePreview: string) => {
@@ -1055,6 +1132,23 @@ const Messages = () => {
         onEndCall={endCall}
         onToggleAudio={toggleAudio}
         onToggleVideo={toggleVideo}
+      />
+
+      {/* Review Dialog */}
+      <ReviewDialog
+        open={showReviewDialog}
+        onOpenChange={setShowReviewDialog}
+        revieweeName={selectedConversation?.full_name || ''}
+        onSubmit={handleSubmitReview}
+      />
+
+      {/* Completion Celebration */}
+      <CompletionCelebration
+        open={showCelebration}
+        onOpenChange={setShowCelebration}
+        projectTitle={completedProjectTitle}
+        completedCount={completedProjectsCount}
+        onOpenReview={() => setShowReviewDialog(true)}
       />
     </div>
   );
