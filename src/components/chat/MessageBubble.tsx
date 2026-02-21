@@ -154,7 +154,26 @@ const MessageBubble = ({
           ) : messageType === 'attachment' ? (
             renderAttachment()
           ) : (
-            <p className="text-sm whitespace-pre-wrap break-words">{content}</p>
+            <p className="text-sm whitespace-pre-wrap break-words">
+              {content.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+                /^https?:\/\//.test(part) ? (
+                  <a
+                    key={i}
+                    href={part}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      "underline break-all",
+                      isOwn ? "text-primary-foreground/90 hover:text-primary-foreground" : "text-primary hover:text-primary/80"
+                    )}
+                  >
+                    {part}
+                  </a>
+                ) : (
+                  <span key={i}>{part}</span>
+                )
+              )}
+            </p>
           )}
           
           <div className={cn(
