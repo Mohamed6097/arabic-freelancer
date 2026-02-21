@@ -415,7 +415,17 @@ const ProjectDetail = () => {
                 </div>
                 <div className="prose prose-sm max-w-none">
                   <h3 className="text-lg font-semibold mb-2">وصف المشروع</h3>
-                  <p className="whitespace-pre-wrap text-muted-foreground">{project.description}</p>
+                  <p className="whitespace-pre-wrap text-muted-foreground">
+                    {project.description.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+                      /^https?:\/\//.test(part) ? (
+                        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80 break-all">
+                          {part}
+                        </a>
+                      ) : (
+                        <span key={i}>{part}</span>
+                      )
+                    )}
+                  </p>
                 </div>
 
                 {/* Attachment Display */}
@@ -495,7 +505,17 @@ const ProjectDetail = () => {
                           </Badge>
                         </div>
                         <div className="mt-4 space-y-2">
-                          <p className="text-sm">{proposal.cover_letter}</p>
+                          <p className="text-sm whitespace-pre-wrap">
+                            {proposal.cover_letter.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+                              /^https?:\/\//.test(part) ? (
+                                <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80 break-all">
+                                  {part}
+                                </a>
+                              ) : (
+                                <span key={i}>{part}</span>
+                              )
+                            )}
+                          </p>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <DollarSign className="h-4 w-4" />
