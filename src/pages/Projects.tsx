@@ -64,7 +64,6 @@ const Projects = () => {
           avatar_url
         )
       `)
-      .eq('status', 'open')
       .order('created_at', { ascending: false });
 
     if (!error && data) {
@@ -144,7 +143,15 @@ const Projects = () => {
                   <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary/50">
                     <CardHeader className="p-3 sm:p-6">
                       <div className="flex flex-col gap-1">
-                        <Badge variant="secondary" className="text-xs w-fit">{project.category}</Badge>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="secondary" className="text-xs w-fit">{project.category}</Badge>
+                          {project.status === 'in_progress' && (
+                            <Badge className="text-xs w-fit bg-amber-500 hover:bg-amber-600 text-white border-0">جاري التنفيذ</Badge>
+                          )}
+                          {project.status === 'completed' && (
+                            <Badge className="text-xs w-fit bg-green-600 hover:bg-green-700 text-white border-0">تم التنفيذ</Badge>
+                          )}
+                        </div>
                         <CardTitle className="text-sm sm:text-lg line-clamp-2">{project.title}</CardTitle>
                       </div>
                       <CardDescription>
