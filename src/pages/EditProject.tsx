@@ -37,6 +37,7 @@ const EditProject = () => {
   const [budgetMin, setBudgetMin] = useState('');
   const [budgetMax, setBudgetMax] = useState('');
   const [deadline, setDeadline] = useState('');
+  const [status, setStatus] = useState('open');
   const [existingAttachmentUrl, setExistingAttachmentUrl] = useState<string | null>(null);
   const [existingAttachmentName, setExistingAttachmentName] = useState<string | null>(null);
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
@@ -73,6 +74,7 @@ const EditProject = () => {
     setBudgetMin(data.budget_min?.toString() || '');
     setBudgetMax(data.budget_max?.toString() || '');
     setDeadline(data.deadline || '');
+    setStatus(data.status || 'open');
     setExistingAttachmentUrl(data.attachment_url);
     setExistingAttachmentName(data.attachment_name);
     setFetching(false);
@@ -154,6 +156,7 @@ const EditProject = () => {
         budget_min: budgetMin ? parseFloat(budgetMin) : null,
         budget_max: budgetMax ? parseFloat(budgetMax) : null,
         deadline: deadline || null,
+        status: status as any,
         attachment_url: attachmentUrl,
         attachment_name: attachmentName,
       })
@@ -239,6 +242,20 @@ const EditProject = () => {
               <div className="space-y-2">
                 <Label htmlFor="deadline">الموعد النهائي</Label>
                 <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>حالة المشروع</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر حالة المشروع" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">مفتوح</SelectItem>
+                    <SelectItem value="in_progress">جاري التنفيذ</SelectItem>
+                    <SelectItem value="completed">تم التنفيذ</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Attachment */}
