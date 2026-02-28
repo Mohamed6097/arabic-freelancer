@@ -240,8 +240,8 @@ const ProjectDetail = () => {
     }
 
     if (status === 'accepted') {
-      // Keep project status as 'open' to allow more proposals
-      // Don't update project status here - it stays open for more freelancers
+      // Update project status to in_progress
+      await supabase.from('projects').update({ status: 'in_progress' }).eq('id', id);
 
       // Auto-send message to freelancer
       if (freelancerId && profile) {
